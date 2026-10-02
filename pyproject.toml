@@ -1,0 +1,65 @@
+[project]
+name = "medynium-api"
+version = "0.1.0"
+description = "Medynium FastAPI backend: governed Patient 360 and clinical agent on Snowflake"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = ["fastapi (>=0.142.2,<0.143.0)", "uvicorn[standard] (>=0.54.0,<0.55.0)", "pydantic-settings (>=2.15.0,<3.0.0)", "snowflake-connector-python (>=4.8.0,<5.0.0)", "cryptography (>=50.0.2,<51.0.0)", "sse-starlette (>=3.5.0,<4.0.0)", "structlog (>=26.1.0,<27.0.0)"]
+
+[tool.poetry]
+packages = [{ include = "medynium_api", from = "src" }]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+dev = "uvicorn medynium_api.main:app --reload --port 8000"
+start = "uvicorn medynium_api.main:app --host 0.0.0.0 --port 8000"
+lint = "ruff check ."
+format = "ruff format ."
+"format:check" = "ruff format --check ."
+typecheck = "mypy src"
+test = "pytest"
+openapi = "python scripts/export_openapi.py"
+check = ["lint", "format:check", "typecheck", "test"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "S", "RUF"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = ["snowflake.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-ra --strict-markers"
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.16.10,<0.17.0)",
+    "mypy (>=2.4.0,<3.0.0)",
+    "pytest (>=9.1.1,<10.0.0)",
+    "pytest-asyncio (>=1.4.0,<2.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "pre-commit (>=4.6.2,<5.0.0)",
+    "poethepoet (>=0.48.0,<0.49.0)",
+    "httpx2 (>=2.13.1,<3.0.0)"
+]

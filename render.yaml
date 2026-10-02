@@ -1,0 +1,36 @@
+# Render Blueprint. Create it from the dashboard: New > Blueprint > pick this repo.
+# `starter` is always on (the free plan sleeps, which would break a live demo). Plan Slice 11.
+services:
+  - type: web
+    name: medynium-api
+    runtime: docker
+    plan: starter
+    region: frankfurt # closest to me-central2 among Render regions; change if you prefer
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: SNOWFLAKE_DATABASE
+        value: MEDYNIUM
+      - key: SNOWFLAKE_WAREHOUSE
+        value: MEDYNIUM_WH
+      - key: ROUTER_MODEL
+        value: llama3.1-8b
+      # Secrets and environment-specific values: set them in the Render dashboard.
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false # the Vercel URL, e.g. https://medynium-ui.vercel.app
+      - key: SNOWFLAKE_ACCOUNT
+        sync: false
+      - key: SNOWFLAKE_USER_KEYS
+        sync: false
+      - key: SNOWFLAKE_USER_KEY_PASSPHRASE
+        sync: false
+      - key: STRONG_MODEL
+        sync: false

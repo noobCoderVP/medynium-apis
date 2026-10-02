@@ -1,0 +1,132 @@
+# External dependencies and what we need from you
+
+Everything outside the two repos that must exist before Medynium works end to end. Status key: **Needed** (blocks work), **Decision** (needs your call; a default is given), **Optional**.
+
+Slices refer to `Medynium_Implementation_Plan.md`. Nothing here is secret in itself; the values you provide are. Put secrets only in the places named in section 7.
+
+## 1. Blocking items by slice
+
+| # | Item | Needed by | Status |
+| --- | --- | --- | --- |
+| 1 | Snowflake account confirmed live, plus a one-time admin session (section 2) | Slice 0 | Needed |
+| 2 | Cortex feature and model availability result (section 3) | Slice 0 | Needed |
+| 3 | `MED_ADMIN` role and setup user with a key pair (section 2) | Slice 1 | Needed |
+| 4 | Key pairs for the three app users (section 2) | Slice 1 | Needed |
+| 5 | Final `STRONG_MODEL` and `ROUTER_MODEL` names (section 3) | Slice 5, 6 | Needed |
+| 6 | Synthea dataset, generated locally (section 4) | Slice 1 | Needed |
+| 7 | Hosting accounts: Render and Vercel (section 5) | Slice 11, earlier for a first deploy | Needed |
+| 8 | GitHub repos for both projects (section 5) | First deploy | Needed |
+| 9 | Decisions in section 6 | Varies | Decision |
+
+## 2. Snowflake
+
+The account in `cortex.py` is `ab29526.me-central2.gcp` (trial, GCP Middle East). Please confirm it is still the account to use.
+
+**What I need from you**
+
+1. **Account identifier** for `SNOWFLAKE_ACCOUNT`, in `<locator>.<region>.<cloud>` form.
+2. **One session as ACCOUNTADMIN, run by you**, to do the things the app roles cannot. I will provide the SQL in `snowflake/00_bootstrap.sql`. It will:
+   - create `MED_ADMIN` (setup only, never used at run time, SEC-06) and a setup user for it;
+   - create the warehouse `MEDYNIUM_WH` (XSMALL, auto-suspend 60 s) and the resource monitor (50% notify, 80% suspend, against your $400 credit);
+   - grant `SNOWFLAKE.CORTEX_USER` to the runtime roles;
+   - enable cross-region inference only if section 3 shows it is needed.
+   Please do not share the ACCOUNTADMIN password with me or put it in any file. Run the script yourself and tell me the result.
+3. **Key pairs.** One for `MED_ADMIN` (setup user) and one each for `SHARMA_DR`, `CLINIC_ASST` and `SECOND_DR`.
+   - I will add `scripts/generate_keypair.py`, which writes the key pair locally and prints the public key for the setup SQL.
+   - **Private keys never enter a repo or this chat.** They go in a local folder outside the repo (admin key) and in the host secret `SNOWFLAKE_USER_KEYS` (app users).
+4. **Network policy**: tell me whether the account has one. If it does, the deployed API's outbound IPs must be allowed (Render documents these per region).
+5. **Rotate the credentials in `cortex.py`.** The file holds a username and defaults to `ACCOUNTADMIN` with a password placeholder. If a real password was ever typed into it or sent anywhere, change it. Run it only with the password in an environment variable.
+
+**Snowflake objects that the setup scripts create** (no action from you; listed so you know what appears in the account)
+
+| Object | Purpose |
+| --- | --- |
+| Database `MEDYNIUM`; schemas `RAW`, `CLINICAL`, `KNOWLEDGE`, `SECURITY`, `ANALYTICS` | Data, per the SRS |
+| Roles `MED_ADMIN`, `MED_DOCTOR`, `MED_ASSISTANT`, `MED_AGENT_READ` | Least-privilege access |
+| Users `SHARMA_DR`, `CLINIC_ASST`, `SECOND_DR` | One Snowflake user per app user |
+| Row access policy on every `PATIENT_ID` table | Entitlements that also bind the AI (SEC-02) |
+| Semantic view, Cortex Search service, Cortex Agent | The AI layer |
+
+## 3. Cortex availability (Slice 0)
+
+Plan assumption 2.4 in the SRS: Analyst, Search and Agents run under the caller's role and honor row access policies. We verify this before building on it.
+
+Please run (or let me prepare) the Slice 0 check and send me the output of:
+
+- which of Cortex Analyst, Cortex Search and Cortex Agents work in `me-central2`;
+- which models `SNOWFLAKE.CORTEX.COMPLETE` accepts there. `cortex.py` already uses `llama3.1-8b`;
+- whether cross-region inference is needed. It moves prompts to another region, so it is acceptable for synthetic and public data only. Document the choice in the README if used.
+
+From that I set `ROUTER_MODEL` and `STRONG_MODEL`.
+
+## 4. Data sources
+
+| Source | What we need | From you |
+| --- | --- | --- |
+| Synthea | About 300 patients, fixed seed, CSV and claims export on | Java 22 is already installed on this machine, so I can run Synthea locally. I need a go-ahead to download the Synthea jar (a public GitHub release). |
+| openFDA drug labels | 20 to 30 drugs, ingested once and saved as raw JSON | Nothing. The API is public and needs no key at this volume. Optionally create a free key at open.fda.gov if we hit the rate limit. |
+| Guidelines and regulatory documents (D2) | A handful of public, license-checked documents (P1) | A decision: skip, or name the documents you want. Labels only is the default. |
+| Clinical notes | About 20, generated by script | Nothing |
+
+## 5. Hosting and tooling
+
+The plan says: small always-on backend host, Next.js frontend host, no Snowpark Container Services. My defaults, which you can change:
+
+| Piece | Default | Why | What I need from you |
+| --- | --- | --- | --- |
+| Backend | Render web service from `render.yaml` (Docker, Starter plan, about $7 a month) | Always on, so no cold start in a live demo; secrets in the dashboard | Render account; connect the GitHub repo; paste the secrets from section 7 |
+| Frontend | Vercel | Native Next.js host | Vercel account; connect the GitHub repo; set `BACKEND_URL` |
+| Source | GitHub, two private repos | CI and auto-deploy | A GitHub account or org to hold `medynium-apis` and `medynium-ui`. `gh` is not installed here, so either install it and run `gh auth login`, or create the empty repos and give me the URLs |
+| Snowflake CLI | `cortex` (CoCo) is already installed | PLT-01 to PLT-03 | Run `cortex` once, sign in, and switch on session-log saving (rubric evidence) |
+| Docker Desktop | Installed, daemon is not running | Local container check | Start it if you want me to verify the image locally |
+
+If you prefer Google Cloud Run (same cloud as the Snowflake account), say so. The Dockerfile works there as is; set minimum instances to 1 to avoid cold starts.
+
+## 6. Decisions for you
+
+| # | Decision | My default |
+| --- | --- | --- |
+| a | **How people sign in to the app.** The API needs to check who is signing in before using their Snowflake key. | Three seeded users with a password each, stored hashed in `SECURITY.APP_USER`. You tell me the three demo passwords at seed time. |
+| b | **Locale and currency.** The prototype shows Indian names and rupees. Synthea produces US patients and USD claims. | Keep Synthea as is and show USD, or rename and convert at load. Tell me which you want for the demo. |
+| c | **Design direction.** The prototype is a behaviour reference, not the target look. | I use a neutral component base (shadcn/ui and Tailwind) and wait for your direction. Send brand name, logo, colors and any reference screens when you have them. |
+| d | **Product name and domain.** | "Medynium" with the default `*.vercel.app` and `*.onrender.com` URLs. A custom domain is optional. |
+| e | **Guideline documents (D2), CoCo run-time skills (D4), action orchestration (D7).** | As in SRS section 10. |
+| f | **Streaming for the safety review.** The SRS says the endpoint returns `answer_id`; the plan says it streams steps over SSE. | SSE, ending with an event that carries `answer_id`. |
+
+## 7. Variable inventory
+
+Where each value lives. `.env.example` in each repo lists the same names.
+
+### medynium-apis (Render environment, or local `.env`)
+
+| Variable | Secret | Who provides | Notes |
+| --- | --- | --- | --- |
+| `SNOWFLAKE_ACCOUNT` | No | You | Section 2 |
+| `SNOWFLAKE_USER_KEYS` | **Yes** | You (I generate the keys) | JSON map of Snowflake user to base64 PEM |
+| `SNOWFLAKE_USER_KEY_PASSPHRASE` | **Yes** | You | Only if keys are encrypted |
+| `SNOWFLAKE_WAREHOUSE`, `SNOWFLAKE_DATABASE` | No | Default set | `MEDYNIUM_WH`, `MEDYNIUM` |
+| `ROUTER_MODEL`, `STRONG_MODEL` | No | Section 3 result | `STRONG_MODEL` is empty until then |
+| `CORTEX_SEARCH_SERVICE`, `CORTEX_SEMANTIC_VIEW`, `CORTEX_AGENT` | No | Default set | Created in Slices 4 and 5 |
+| `SESSION_SECRET` | **Yes** | Generated | Render generates it for the deployed service |
+| `CORS_ORIGINS` | No | You | The Vercel URL, once it exists |
+| `COOKIE_SECURE` | No | Default set | `true` on Render |
+| `ROUTER_*`, `AGENT_TIMEOUT_SECONDS`, `LOG_LEVEL`, `SESSION_TTL_MINUTES` | No | Default set | Tune in Slice 6 |
+| `SNOWFLAKE_ADMIN_USER`, `SNOWFLAKE_ADMIN_PRIVATE_KEY_PATH`, `SNOWFLAKE_ADMIN_ROLE` | **Yes** | You | Setup scripts only, on your machine, never deployed |
+
+### medynium-ui (Vercel environment, or local `.env.local`)
+
+| Variable | Secret | Who provides | Notes |
+| --- | --- | --- | --- |
+| `BACKEND_URL` | No | You, after the Render service exists | Server-side only. The UI proxies `/api/*` to it, so cookies stay same-origin |
+| `NEXT_PUBLIC_APP_NAME` | No | Default set | `Medynium` |
+
+### GitHub Actions (optional, later)
+
+Only needed if CI deploys instead of the host auto-deploying: `RENDER_DEPLOY_HOOK_URL`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Not needed with the default setup.
+
+## 8. Things I cannot do and will not do
+
+- I will not run anything as `ACCOUNTADMIN`, and I need no admin password.
+- I will not put private keys, passwords or tokens in a repo, a log or a chat message.
+- I cannot create hosting or GitHub accounts for you or pay for plans.
+- I cannot confirm Cortex feature availability in `me-central2` without a live connection; the Slice 0 result decides the models.

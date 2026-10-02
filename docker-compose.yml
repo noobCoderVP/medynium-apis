@@ -1,0 +1,10 @@
+# Local container run: `docker compose up --build`. For day-to-day work use `poetry run poe dev` instead.
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      APP_ENV: local
