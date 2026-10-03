@@ -63,7 +63,7 @@ def test_s1_trend_timeline_claims_notes(users: dict) -> None:
     clm = next(c for c in claims["claims"] if c["claim_id"] == "CLM-1024")
     assert clm["encounter_id"] == "ENC-20931" and clm["approved"]["amount"] == 18400
     notes = client.get(f"/patients/{S1}/notes").json()
-    assert {n["note_id"] for n in notes} >= {"DOC-ED-20931", "DOC-DS-19877"}
+    assert {n["note_id"] for n in notes["items"]} >= {"DOC-ED-20931", "DOC-DS-19877"}
     assert "body" in client.get(f"/patients/{S1}/notes/DOC-ED-20931").json()
     assert (
         "contains_injection"

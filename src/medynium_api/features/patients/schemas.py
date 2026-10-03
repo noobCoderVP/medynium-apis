@@ -1,7 +1,8 @@
 import datetime as dt
+import re
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from medynium_api.core.pagination import Page
 from medynium_api.core.schemas import EncounterRef, Flag, Money
@@ -100,9 +101,8 @@ class TimelineEvent(BaseModel):
     encounter_id: str | None
 
 
-class Timeline(BaseModel):
-    items: list[TimelineEvent]
-    total: int
+class Timeline(Page[TimelineEvent]):
+    pass
 
 
 class Utilization(BaseModel):
@@ -143,6 +143,9 @@ class Claim(BaseModel):
 class Claims(BaseModel):
     utilization: Utilization
     claims: list[Claim]
+    total: int
+    limit: int
+    offset: int
 
 
 class NoteSummary(BaseModel):
@@ -151,6 +154,36 @@ class NoteSummary(BaseModel):
     type: str | None
     date: dt.date
     encounter_id: str | None
+
+
+NoteList = Page[NoteSummary]
+MedicationList = Page[Medication]
+LabList = Page[LabLatest]
+
+
+ShareSection = Literal["diagnoses", "medications", "labs", "events"]
+DEFAULT_SECTIONS: tuple[ShareSection, ...] = ("diagnoses", "medications", "labs")
+
+
+class ShareRequest(BaseModel):
+    """Email one summary of this patient to one recipient."""
+
+    model_config = ConfigDict(extra="forbid")
+    to: str = Field(max_length=254)
+    note: str | None = Field(default=None, max_length=500)
+    include: list[ShareSection] = Field(default_factory=lambda: list(DEFAULT_SECTIONS))
+
+    @field_validator("to")
+    @classmethod
+    def _to(cls, value: str) -> str:
+        value = value.strip().lower()
+        if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", value):
+            raise ValueError("not a valid email address")
+        return value
+
+
+class ShareResult(BaseModel):
+    sent: bool
 
 
 class NoteDetail(NoteSummary):

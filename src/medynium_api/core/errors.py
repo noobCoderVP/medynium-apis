@@ -24,6 +24,7 @@ class ErrorCode(StrEnum):
     ACTION_NOT_ALLOWED = "action_not_allowed"
     AGENT_UNAVAILABLE = "agent_unavailable"
     TIMEOUT = "timeout"
+    SERVICE_UNAVAILABLE = "service_unavailable"
     CONFLICT = "conflict"
     RATE_LIMITED = "rate_limited"
     INVALID_REQUEST = "invalid_request"
@@ -46,6 +47,7 @@ STATUS: dict[ErrorCode, int] = {
     ErrorCode.ACTION_NOT_ALLOWED: 403,
     ErrorCode.AGENT_UNAVAILABLE: 503,
     ErrorCode.TIMEOUT: 504,
+    ErrorCode.SERVICE_UNAVAILABLE: 503,
     ErrorCode.CONFLICT: 409,
     ErrorCode.RATE_LIMITED: 429,
     ErrorCode.INVALID_REQUEST: 422,
@@ -111,6 +113,7 @@ def _response(
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, exc: ApiError) -> JSONResponse:
+        log.info("api_error", code=exc.code.value, status=exc.status_code)
         return _response(exc.code, exc.message, exc.status_code, exc.details, exc.headers)
 
     @app.exception_handler(RequestValidationError)

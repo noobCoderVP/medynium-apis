@@ -6,6 +6,7 @@ from typing import Any
 from medynium_api.core.access import clear_cache
 from medynium_api.core.audit.writer import write_auth_event
 from medynium_api.core.config import Settings
+from medynium_api.core.email import Mailer, get_mailer, invite_email, reset_email
 from medynium_api.core.errors import conflict, invalid, not_found
 from medynium_api.core.ids import new_uuid
 from medynium_api.core.pagination import PageParams
@@ -18,6 +19,7 @@ from medynium_api.features.admin.schemas import (
     InviteCreate,
     InviteCreated,
     InviteItem,
+    InvitePage,
     UserItem,
     UserPage,
     UserPatch,
@@ -33,12 +35,18 @@ def _user(row: dict[str, Any]) -> UserItem:
 
 
 class AdminService:
-    def __init__(self, settings: Settings, repo: AdminRepository | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        repo: AdminRepository | None = None,
+        mailer: Mailer | None = None,
+    ) -> None:
         self.settings = settings
         self.repo = repo or AdminRepository()
+        self.mailer = mailer or get_mailer(settings)
 
     def _link(self, token: str) -> str:
-        return f"{self.settings.public_app_url.rstrip('/')}/accept?token={token}"
+        return f"{self.settings.public_app_url.rstrip('/')}/invite/{token}"
 
     # Invitations ---------------------------------------------------------------------------------------------------
     def create_invite(self, admin: Session, body: InviteCreate) -> InviteCreated:
@@ -91,22 +99,36 @@ class AdminService:
             email_attempted=body.email,
             detail={"role": body.role},
         )
-        invites = [i for i in self.repo.invites() if i["invite_id"] == invite_id]
-        return InviteCreated(
-            invite_id=invite_id,
-            email=body.email,
-            accept_url=self._link(token),
-            expires_at=invites[0]["expires_at"],
+        expires_at = self.repo.invite_expiry(invite_id)
+        link = self._link(token)
+        sent = self.mailer.send(
+            invite_email(body.display_name, body.role, link, expires_at, body.email)
         )
+        return InviteCreated(
+            invite_id=invite_id, email=body.email, accept_url=link, expires_at=expires_at,
+            email_sent=sent,
+        )  # fmt: skip
 
-    def invites(self) -> list[InviteItem]:
-        return [
-            InviteItem(
-                invite_id=r["invite_id"], email=r["email"], display_name=r["display_name"], role=r["role_code"],
-                kind=r["kind"], status=r["status"], expires_at=r["expires_at"], created_at=r["created_at"],
-            )
-            for r in self.repo.invites()
-        ]  # fmt: skip
+    def invites(
+        self,
+        q: str | None,
+        status: str | None,
+        kind: str | None,
+        sort: str | None,
+        order: str,
+        page: PageParams,
+    ) -> InvitePage:
+        rows, total = self.repo.invites(q, status, kind, sort, order, page.limit, page.offset)
+        return InvitePage(
+            items=[
+                InviteItem(
+                    invite_id=r["invite_id"], email=r["email"], display_name=r["display_name"], role=r["role_code"],
+                    kind=r["kind"], status=r["status"], expires_at=r["expires_at"], created_at=r["created_at"],
+                )
+                for r in rows
+            ],
+            total=total, limit=page.limit, offset=page.offset,
+        )  # fmt: skip
 
     def revoke_invite(self, invite_id: str) -> None:
         if self.repo.revoke_invite(invite_id) == 0:
@@ -114,9 +136,15 @@ class AdminService:
 
     # Users -------------------------------------------------------------------------------------------------------
     def list_users(
-        self, q: str | None, role: str | None, status: str | None, page: PageParams
+        self,
+        q: str | None,
+        role: str | None,
+        status: str | None,
+        sort: str | None,
+        order: str,
+        page: PageParams,
     ) -> UserPage:
-        rows, total = self.repo.list_users(q, role, status, page.limit, page.offset)
+        rows, total = self.repo.list_users(q, role, status, sort, order, page.limit, page.offset)
         return UserPage(
             items=[_user(r) for r in rows], total=total, limit=page.limit, offset=page.offset
         )
@@ -167,13 +195,15 @@ class AdminService:
             actor_id=admin.user_id,
             detail={"kind": "PASSWORD_RESET"},
         )
-        match = [i for i in self.repo.invites() if i["invite_id"] == invite_id]
-        return InviteCreated(
-            invite_id=invite_id,
-            email=row["email"],
-            accept_url=self._link(token),
-            expires_at=match[0]["expires_at"],
+        expires_at = self.repo.invite_expiry(invite_id)
+        link = self._link(token)
+        sent = self.mailer.send(
+            reset_email(row["display_name"], link, expires_at, row["email"]),
         )
+        return InviteCreated(
+            invite_id=invite_id, email=row["email"], accept_url=link, expires_at=expires_at,
+            email_sent=sent,
+        )  # fmt: skip
 
     # Entitlements ---------------------------------------------------------------------------------------------------
     def entitlements(self, user_id: str) -> Entitlements:

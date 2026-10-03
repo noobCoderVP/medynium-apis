@@ -3,6 +3,7 @@
 import json
 from typing import Any
 
+from medynium_api.core.pagination import like, order_clause
 from medynium_api.core.snowflake.queries import Row, execute, fetch_all, fetch_one, json_value
 from medynium_api.core.snowflake.role_session import service_cursor
 
@@ -13,14 +14,32 @@ USER_SELECT = (
 )
 
 
+USER_SORTS = {
+    "name": "u.DISPLAY_NAME",
+    "email": "u.EMAIL",
+    "role": "u.ROLE_CODE",
+    "last_login": "u.LAST_LOGIN_AT",
+    "patients": "PATIENT_COUNT",
+}
+INVITE_SORTS = {"created": "CREATED_AT", "expires": "EXPIRES_AT", "email": "EMAIL"}
+INVITE_STATUS = "IFF(STATUS = 'PENDING' AND EXPIRES_AT < SYSDATE(), 'EXPIRED', STATUS)"
+
+
 class AdminRepository:
     def list_users(
-        self, q: str | None, role: str | None, status: str | None, limit: int, offset: int
+        self,
+        q: str | None,
+        role: str | None,
+        status: str | None,
+        sort: str | None,
+        order: str,
+        limit: int,
+        offset: int,
     ) -> tuple[list[Row], int]:
         where, params = ["TRUE"], []
         if q:
             where.append("(u.DISPLAY_NAME ILIKE %s OR u.EMAIL ILIKE %s)")
-            params += [f"%{q}%", f"%{q}%"]
+            params += [like(q), like(q)]
         if role:
             where.append("u.ROLE_CODE = %s")
             params.append(role)
@@ -30,7 +49,8 @@ class AdminRepository:
         with service_cursor() as cur:
             rows = fetch_all(
                 cur,
-                f"{USER_SELECT} WHERE {' AND '.join(where)} ORDER BY u.DISPLAY_NAME LIMIT %s OFFSET %s",
+                f"{USER_SELECT} WHERE {' AND '.join(where)} "
+                f"ORDER BY {order_clause(sort, order, USER_SORTS, 'name', 'u.USER_ID')} LIMIT %s OFFSET %s",
                 [*params, limit, offset],
             )
             total = fetch_one(
@@ -117,13 +137,44 @@ class AdminRepository:
                 values,
             )
 
-    def invites(self) -> list[Row]:
+    def invites(
+        self,
+        q: str | None,
+        status: str | None,
+        kind: str | None,
+        sort: str | None,
+        order: str,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[Row], int]:
+        where, params = ["TRUE"], []
+        if q:
+            where.append("(EMAIL ILIKE %s OR DISPLAY_NAME ILIKE %s)")
+            params += [like(q), like(q)]
+        if status:
+            where.append(f"{INVITE_STATUS} = %s")
+            params.append(status)
+        if kind:
+            where.append("KIND = %s")
+            params.append(kind)
         with service_cursor() as cur:
-            return fetch_all(
+            rows = fetch_all(
                 cur,
-                "SELECT INVITE_ID, EMAIL, DISPLAY_NAME, ROLE_CODE, KIND, IFF(STATUS = 'PENDING' AND EXPIRES_AT < SYSDATE(), "
-                "'EXPIRED', STATUS) AS STATUS, EXPIRES_AT, CREATED_AT FROM SECURITY.USER_INVITE ORDER BY CREATED_AT DESC LIMIT 200",
+                f"SELECT INVITE_ID, EMAIL, DISPLAY_NAME, ROLE_CODE, KIND, {INVITE_STATUS} AS STATUS, EXPIRES_AT, "
+                f"CREATED_AT, COUNT(*) OVER () AS TOTAL FROM SECURITY.USER_INVITE WHERE {' AND '.join(where)} "
+                f"ORDER BY {order_clause(sort, order, INVITE_SORTS, 'created', 'INVITE_ID')} LIMIT %s OFFSET %s",
+                [*params, limit, offset],
             )
+        return rows, int(rows[0]["total"]) if rows else 0
+
+    def invite_expiry(self, invite_id: str) -> Any:
+        with service_cursor() as cur:
+            row = fetch_one(
+                cur,
+                "SELECT EXPIRES_AT FROM SECURITY.USER_INVITE WHERE INVITE_ID = %s",
+                (invite_id,),
+            )
+        return row["expires_at"] if row else None
 
     def revoke_invite(self, invite_id: str) -> int:
         with service_cursor() as cur:

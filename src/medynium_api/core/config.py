@@ -31,6 +31,14 @@ class Settings(BaseSettings):
     demo_as_of_date: str = "2026-10-02"
     public_app_url: str = "http://localhost:3000"  # base of invitation and reset links
 
+    # Email (Resend). With no key the app runs and simply does not send.
+    resend_api_key: SecretStr | None = None
+    email_from: str = "Medynium <onboarding@resend.dev>"  # use a verified domain in production
+    email_reply_to: str | None = None
+    # Second step at sign-in: a six-digit code emailed after the password is accepted.
+    login_otp_enabled: bool = False
+    otp_minutes: int = 10
+
     # Snowflake: one service identity (key pair), per-request role U_<user> (ADR-003)
     snowflake_account: str = ""
     snowflake_warehouse: str = "MEDYNIUM_WH"
@@ -86,6 +94,8 @@ class Settings(BaseSettings):
                 )
             if not self.snowflake_configured:
                 raise RuntimeError("Snowflake account and service key must be set")
+            if self.login_otp_enabled and self.resend_api_key is None:
+                raise RuntimeError("LOGIN_OTP_ENABLED needs RESEND_API_KEY, or nobody can sign in")
 
 
 @lru_cache

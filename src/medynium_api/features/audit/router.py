@@ -1,9 +1,9 @@
 import datetime as dt
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
 
-from medynium_api.core.pagination import Paging
+from medynium_api.core.pagination import Paging, SortOrder
 from medynium_api.core.session import CurrentSession
 from medynium_api.features.audit.schemas import AuditPage
 from medynium_api.features.audit.service import AuditService
@@ -28,6 +28,9 @@ def audit(
     to: dt.date | None = None,
     action: str | None = None,
     outcome: str | None = None,
+    q: str | None = None,
+    sort: Literal["when", "action", "outcome"] = "when",
+    order: SortOrder = "desc",
 ) -> AuditPage:
     """The caller's own entries, newest first. Denied attempts are included."""
-    return service.entries(session, patient_id, from_, to, action, outcome, page)
+    return service.entries(session, patient_id, from_, to, action, outcome, q, sort, order, page)

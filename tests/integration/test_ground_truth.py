@@ -99,6 +99,6 @@ def test_s1_current_medicines_equal_ground_truth(users: dict) -> None:
         for r in truth(users["sharma"]["snowflake_role"], "s1_active_medications.sql")
     }
     client = signed_in("sharma@demo.medynium")
-    listed = {m["drug"] for m in client.get(f"/patients/{S1}/medications").json()}
+    listed = {m["drug"] for m in client.get(f"/patients/{S1}/medications").json()["items"]}
     overview = {m["drug"] for m in client.get(f"/patients/{S1}").json()["medications"]}
     assert listed == overview == expected

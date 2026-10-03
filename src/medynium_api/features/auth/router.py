@@ -6,14 +6,18 @@ from medynium_api.core.config import Settings, get_settings
 from medynium_api.core.errors import ErrorBody
 from medynium_api.core.security.cookies import REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from medynium_api.core.session import CurrentSession, MaybeSession
+from medynium_api.features.auth.invites import InviteService
 from medynium_api.features.auth.schemas import (
     AcceptInviteRequest,
     AcceptInviteResponse,
     ChangePasswordRequest,
+    ForgotPasswordRequest,
     InvitePreview,
     LoginRequest,
     LoginResponse,
     MeResponse,
+    OtpChallenge,
+    OtpVerifyRequest,
 )
 from medynium_api.features.auth.service import AuthService
 
@@ -28,6 +32,13 @@ def get_service(settings: SettingsDep) -> AuthService:
 Service = Annotated[AuthService, Depends(get_service)]
 
 
+def get_invites(settings: SettingsDep) -> InviteService:
+    return InviteService(settings)
+
+
+Invites = Annotated[InviteService, Depends(get_invites)]
+
+
 def client(request: Request) -> tuple[str | None, str | None]:
     return (request.client.host if request.client else None), request.headers.get("user-agent")
 
@@ -39,12 +50,38 @@ def login(
     response: Response,
     service: Service,
     settings: SettingsDep,
-) -> LoginResponse:
-    """Start a session. Sets the `med_access` and `med_refresh` cookies."""
+) -> LoginResponse | OtpChallenge:
+    """Start a session and set the `med_access` and `med_refresh` cookies.
+
+    When email codes are required (LOGIN_OTP_ENABLED) no session starts yet: an `OtpChallenge` comes back and the
+    client finishes with `POST /auth/login/verify`.
+    """
     ip, agent = client(request)
     result, tokens = service.login(body.email, body.password, ip, agent)
+    if tokens is not None:
+        set_auth_cookies(response, settings, tokens.access, tokens.refresh)
+    return result
+
+
+@router.post("/auth/login/verify", responses={401: {"model": ErrorBody}, 429: {"model": ErrorBody}})
+def verify_login(
+    body: OtpVerifyRequest,
+    request: Request,
+    response: Response,
+    service: Service,
+    settings: SettingsDep,
+) -> LoginResponse:
+    """Finish a sign-in with the six-digit code that was emailed. Sets the auth cookies."""
+    ip, agent = client(request)
+    result, tokens = service.verify_otp(body.challenge, body.code, ip, agent)
     set_auth_cookies(response, settings, tokens.access, tokens.refresh)
     return result
+
+
+@router.post("/auth/password/forgot", status_code=204, responses={429: {"model": ErrorBody}})
+def forgot_password(body: ForgotPasswordRequest, request: Request, service: Invites) -> None:
+    """Public. Emails a one-time reset link when the address belongs to an active account. Always 204."""
+    service.forgot_password(body.email, client(request)[0])
 
 
 @router.post("/auth/refresh", status_code=204, responses={401: {"model": ErrorBody}})
@@ -82,14 +119,14 @@ def change_password(
 
 
 @router.get("/auth/invites/{token}", responses={404: {"model": ErrorBody}})
-def invite_preview(token: str, service: Service) -> InvitePreview:
+def invite_preview(token: str, service: Invites) -> InvitePreview:
     """Public. Who an invitation or reset link is for."""
     return service.invite_preview(token)
 
 
 @router.post("/auth/invites/accept", status_code=201, responses={404: {"model": ErrorBody}})
 def accept_invite(
-    body: AcceptInviteRequest, request: Request, service: Service
+    body: AcceptInviteRequest, request: Request, service: Invites
 ) -> AcceptInviteResponse:
     """Public. Set a password and activate the account (or complete a password reset)."""
     return AcceptInviteResponse(email=service.accept(body, client(request)[0]))

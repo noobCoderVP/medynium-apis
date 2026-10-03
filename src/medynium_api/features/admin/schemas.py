@@ -36,6 +36,7 @@ class InviteCreated(BaseModel):
     email: str
     accept_url: str
     expires_at: dt.datetime
+    email_sent: bool = False
 
 
 class InviteItem(BaseModel):
@@ -62,6 +63,7 @@ class UserItem(BaseModel):
 
 
 UserPage = Page[UserItem]
+InvitePage = Page[InviteItem]
 
 
 class UserPatch(Strict):

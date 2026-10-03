@@ -1,6 +1,6 @@
 """Request id, timing and response hygiene as a pure ASGI middleware (safe for SSE streams).
 
-Logs method, route template (never the raw path with ids), status and duration. Never logs bodies, cookies,
+Logs method, route template (never the raw path with ids), status, duration and the caller's user id (warning for 4xx, error for 5xx). Never logs bodies, cookies,
 tokens, patient names or question text.
 """
 
@@ -46,11 +46,13 @@ class RequestContextMiddleware:
             await self.app(scope, receive, send_wrapper)
         finally:
             route = scope.get("route")
-            log.info(
+            emit = log.error if status >= 500 else log.warning if status >= 400 else log.info
+            emit(
                 "request",
                 method=scope["method"],
                 route=getattr(route, "path", "unmatched"),
                 status=status,
                 ms=round((time.perf_counter() - started) * 1000),
+                user_id=scope.get("state", {}).get("user_id"),
             )
             structlog.contextvars.clear_contextvars()

@@ -25,6 +25,8 @@ PROTECTED = [
     ("GET", "/views"),
     ("POST", "/views/preview"),
     ("GET", "/admin/users"),
+    ("GET", "/admin/invites"),
+    ("POST", "/patients/P-1042/share"),
     ("POST", "/admin/invites"),
     ("GET", "/health/details"),
 ]

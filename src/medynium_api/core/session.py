@@ -37,6 +37,7 @@ def optional_session(request: Request) -> Session | None:
     claims = decode_access_token(get_settings(), token) if token else None
     if claims is None:
         return None
+    request.state.user_id = claims.user_id  # read by the request log line
     return Session(
         user_id=claims.user_id,
         role=claims.role,

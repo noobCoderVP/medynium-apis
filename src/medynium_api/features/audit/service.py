@@ -19,10 +19,23 @@ class AuditService:
         end: dt.date | None,
         action: str | None,
         outcome: str | None,
+        q: str | None,
+        sort: str | None,
+        order: str,
         page: PageParams,
     ) -> AuditPage:
         rows, total = self.repo.list_entries(
-            session.snowflake_role, patient_id, start, end, action, outcome, page.limit, page.offset
+            session.snowflake_role,
+            patient_id,
+            start,
+            end,
+            action,
+            outcome,
+            q,
+            sort,
+            order,
+            page.limit,
+            page.offset,
         )
         items = [
             AuditItem(

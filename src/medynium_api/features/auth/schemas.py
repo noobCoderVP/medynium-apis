@@ -28,6 +28,24 @@ class LoginResponse(BaseModel):
     session_expires_at: datetime
 
 
+class OtpChallenge(BaseModel):
+    """Returned instead of a session when sign-in needs the emailed code."""
+
+    otp_required: Literal[True] = True
+    challenge: str
+    email_hint: str
+    expires_in_minutes: int
+
+
+class OtpVerifyRequest(Strict):
+    challenge: str = Field(min_length=20, max_length=2000)
+    code: str = Field(min_length=6, max_length=6, pattern=r"^[0-9]{6}$")
+
+
+class ForgotPasswordRequest(Strict):
+    email: str = Field(min_length=3, max_length=254)
+
+
 class MeResponse(UserOut):
     supervising_doctor_id: str | None = None
     patient_count: int

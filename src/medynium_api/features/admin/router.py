@@ -1,19 +1,19 @@
 """User, invitation and entitlement administration. Doctors with IS_ADMIN only (otherwise 403)."""
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends
 
 from medynium_api.core.config import Settings, get_settings
 from medynium_api.core.errors import ErrorBody
-from medynium_api.core.pagination import Paging
+from medynium_api.core.pagination import Paging, SortOrder
 from medynium_api.core.session import AdminSession
 from medynium_api.features.admin.schemas import (
     Entitlements,
     EntitlementsSet,
     InviteCreate,
     InviteCreated,
-    InviteItem,
+    InvitePage,
     UserItem,
     UserPage,
     UserPatch,
@@ -36,13 +36,22 @@ Service = Annotated[AdminService, Depends(get_service)]
 
 @router.post("/invites", status_code=201)
 def create_invite(body: InviteCreate, admin: AdminSession, service: Service) -> InviteCreated:
-    """Create an invitation. The link is returned once; only its hash is stored. No email is sent."""
+    """Create an invitation. The link is emailed (when email is configured) and returned once; only its hash is stored."""
     return service.create_invite(admin, body)
 
 
 @router.get("/invites")
-def list_invites(admin: AdminSession, service: Service) -> list[InviteItem]:
-    return service.invites()
+def list_invites(
+    admin: AdminSession,
+    service: Service,
+    page: Paging,
+    q: str | None = None,
+    status: Literal["PENDING", "ACCEPTED", "REVOKED", "EXPIRED"] | None = None,
+    kind: Literal["INVITE", "PASSWORD_RESET"] | None = None,
+    sort: Literal["created", "expires", "email"] = "created",
+    order: SortOrder = "desc",
+) -> InvitePage:
+    return service.invites(q, status, kind, sort, order, page)
 
 
 @router.delete("/invites/{invite_id}", status_code=204)
@@ -56,10 +65,12 @@ def list_users(
     service: Service,
     page: Paging,
     q: str | None = None,
-    role: str | None = None,
-    status: str | None = None,
+    role: Literal["DOCTOR", "ASSISTANT"] | None = None,
+    status: Literal["ACTIVE", "DISABLED"] | None = None,
+    sort: Literal["name", "email", "role", "last_login", "patients"] = "name",
+    order: SortOrder = "asc",
 ) -> UserPage:
-    return service.list_users(q, role, status, page)
+    return service.list_users(q, role, status, sort, order, page)
 
 
 @router.get("/users/{user_id}")

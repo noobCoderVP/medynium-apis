@@ -87,12 +87,25 @@ class CopilotService:
         run: Run,
     ) -> None:
         ask_limiter.check(session.user_id)
+        log.info("ask_start", screen=screen, has_patient=bool(patient_id), history=len(history))
         if patient_id:
             self.precheck(session, patient_id, question)
+            log.info("ask_entitled")
         decision = decide(self.settings, question, screen, patient_id, history)
+        log.info(
+            "ask_routed",
+            routes=[s.route for s in decision.steps],
+            model=decision.model,
+            fallback=decision.fallback,
+            escalated=decision.escalated,
+        )
         context_patient = patient_id
-        for step in decision.steps:
+        for index, step in enumerate(decision.steps, start=1):
             info = self._info(decision, step)
+            log.info(
+                "ask_step", n=index, of=len(decision.steps), route=step.route, reason=step.reason
+            )
+            step_started = time.monotonic()
             run.emit(
                 "route",
                 info.model_dump(mode="json")
@@ -119,6 +132,7 @@ class CopilotService:
                     self._dispatch(ctx, run, decision, context_patient) or context_patient
                 )
             except ApiError as exc:
+                log.warning("ask_step_failed", n=index, route=step.route, code=exc.code.value)
                 run.audit_id = write_audit(
                     session,
                     AuditEntry(
@@ -134,6 +148,10 @@ class CopilotService:
                     ),
                 )
                 raise
+            log.info(
+                "ask_step_done", n=index, route=step.route,
+                ms=round((time.monotonic() - step_started) * 1000),
+            )  # fmt: skip
 
     def _info(self, decision: Decision, step: Step) -> RouteInfo:
         free = step.route in ("lookup", "action", "refuse", "knowledge")

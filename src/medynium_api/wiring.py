@@ -3,6 +3,7 @@ copilot needs from another feature arrives here as a port, implemented with that
 
 from medynium_api.core.session import Session
 from medynium_api.features.copilot.ports import PatientRef, Ports
+from medynium_api.features.patients.filters import PatientFilters
 from medynium_api.features.patients.repository import PatientRepository
 from medynium_api.features.pins.schemas import PinCreate
 from medynium_api.features.pins.service import PinService
@@ -10,7 +11,9 @@ from medynium_api.features.pins.service import PinService
 
 class AppPorts:
     def find_patients(self, session: Session, query: str, limit: int) -> list[PatientRef]:
-        rows, _ = PatientRepository().list_patients(session.snowflake_role, query, False, limit, 0)
+        rows, _ = PatientRepository().list_patients(
+            session.snowflake_role, PatientFilters(q=query), limit, 0
+        )
         return [
             PatientRef(
                 patient_id=r["patient_id"], name=r["full_name"], age=int(r["age_years"]), sex=r["sex"],

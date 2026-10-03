@@ -130,6 +130,23 @@ class AuthRepository:
             row["patient_ids"] = json_value(row["patient_ids"]) or []
         return row
 
+    def create_reset(self, values: tuple[Any, ...]) -> None:
+        """A self-service password-reset link. Same table and hashing as an admin-issued one."""
+        with service_cursor() as cur:
+            execute(
+                cur,
+                "UPDATE SECURITY.USER_INVITE SET STATUS = 'REVOKED' WHERE EMAIL = %s AND KIND = 'PASSWORD_RESET' "
+                "AND STATUS = 'PENDING'",
+                (values[1],),
+            )
+            execute(
+                cur,
+                "INSERT INTO SECURITY.USER_INVITE (INVITE_ID, EMAIL, DISPLAY_NAME, ROLE_CODE, IS_ADMIN, SUPERVISING_DOCTOR_ID, "
+                "PATIENT_IDS, TOKEN_HASH, KIND, EXPIRES_AT, INVITED_BY, CREATED_AT) "
+                "SELECT %s, %s, %s, %s, %s, %s, PARSE_JSON('[]'), %s, 'PASSWORD_RESET', DATEADD('hour', %s, SYSDATE()), %s, SYSDATE()",
+                values,
+            )
+
     def mark_invite_accepted(self, invite_id: str) -> None:
         with service_cursor() as cur:
             execute(

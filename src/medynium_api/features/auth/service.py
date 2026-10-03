@@ -9,25 +9,44 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
+import structlog
+
 from medynium_api.core.audit.writer import write_auth_event
 from medynium_api.core.config import Settings
-from medynium_api.core.errors import ApiError, ErrorCode, conflict, invalid, not_found, unauthorized
+from medynium_api.core.email import (
+    Mailer,
+    get_mailer,
+    otp_email,
+    password_changed_email,
+)
+from medynium_api.core.errors import (
+    ApiError,
+    ErrorCode,
+    unauthorized,
+)
 from medynium_api.core.ids import new_uuid
-from medynium_api.core.security.passwords import hash_password, password_problems, verify_password
+from medynium_api.core.security import otp
+from medynium_api.core.security.passwords import hash_password, verify_password
 from medynium_api.core.security.ratelimit import login_limiter
-from medynium_api.core.security.tokens import create_access_token, hash_token, new_refresh_token
+from medynium_api.core.security.tokens import (
+    create_access_token,
+    hash_token,
+    new_refresh_token,
+)
 from medynium_api.core.session import Session
+from medynium_api.features.auth.invites import check_password
 from medynium_api.features.auth.repository import AuthRepository, utc_now
 from medynium_api.features.auth.schemas import (
-    AcceptInviteRequest,
     ChangePasswordRequest,
-    InvitePreview,
     LoginResponse,
     MeResponse,
+    OtpChallenge,
     UserOut,
 )
 
 BAD_CREDENTIALS = "Email or password is incorrect."
+
+log = structlog.get_logger()
 
 
 @dataclass(frozen=True)
@@ -53,14 +72,20 @@ def user_out(row: dict[str, Any]) -> UserOut:
 
 
 class AuthService:
-    def __init__(self, settings: Settings, repo: AuthRepository | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        repo: AuthRepository | None = None,
+        mailer: Mailer | None = None,
+    ) -> None:
         self.settings = settings
         self.repo = repo or AuthRepository()
+        self.mailer = mailer or get_mailer(settings)
 
     # Sign in -----------------------------------------------------------------------------------------------------
     def login(
         self, email: str, password: str, ip: str | None, user_agent: str | None
-    ) -> tuple[LoginResponse, Tokens]:
+    ) -> tuple[LoginResponse | OtpChallenge, Tokens | None]:
         email = email.strip().lower()
         login_limiter.check(f"ip:{ip}")
         login_limiter.check(f"email:{email}")
@@ -85,14 +110,60 @@ class AuthService:
                 "LOGIN_FAILURE", user_id=row["user_id"] if row else None, email_attempted=email,
                 ip_address=ip, user_agent=user_agent,
             )  # fmt: skip
+            reason = (
+                "unknown_user"
+                if not row
+                else "inactive"
+                if not active
+                else "locked"
+                if locked
+                else "bad_password"
+            )
+            log.warning("login_failed", reason=reason)
             raise unauthorized(BAD_CREDENTIALS)
 
+        if self.settings.login_otp_enabled:
+            return self._issue_otp(row, ip, user_agent), None
+        return self._finish_login(row, ip, user_agent)
+
+    def _finish_login(
+        self, row: dict[str, Any], ip: str | None, user_agent: str | None
+    ) -> tuple[LoginResponse, Tokens]:
         self.repo.record_success(row["user_id"])
         tokens, expires = self._start_session(row, ip, user_agent)
         write_auth_event(
             "LOGIN_SUCCESS", user_id=row["user_id"], ip_address=ip, user_agent=user_agent
         )
+        log.info("login_ok", user_id=row["user_id"], role=row["role_code"])
         return LoginResponse(user=user_out(row), session_expires_at=expires), tokens
+
+    # Second step: an emailed six-digit code ----------------------------------------------------------------------
+    def _issue_otp(
+        self, row: dict[str, Any], ip: str | None, user_agent: str | None
+    ) -> OtpChallenge:
+        code = otp.new_code()
+        message = otp_email(row["display_name"], code, self.settings.otp_minutes, row["email"])
+        if not self.mailer.send(message):
+            raise ApiError(
+                ErrorCode.SERVICE_UNAVAILABLE, "We could not send your sign-in code. Try again."
+            )
+        write_auth_event("OTP_SENT", user_id=row["user_id"], ip_address=ip, user_agent=user_agent)
+        return OtpChallenge(
+            challenge=otp.create_challenge(self.settings, row["user_id"], code),
+            email_hint=otp.mask_email(row["email"]),
+            expires_in_minutes=self.settings.otp_minutes,
+        )
+
+    def verify_otp(
+        self, challenge: str, code: str, ip: str | None, user_agent: str | None
+    ) -> tuple[LoginResponse, Tokens]:
+        login_limiter.check(f"ip:{ip}")
+        user_id = otp.verify_challenge(self.settings, challenge, code)
+        row = self.repo.user_by_id(user_id) if user_id else None
+        if not row or row["status"] != "ACTIVE":
+            write_auth_event("OTP_FAILURE", user_id=user_id, ip_address=ip, user_agent=user_agent)
+            raise unauthorized("That code is incorrect or has expired.")
+        return self._finish_login(row, ip, user_agent)
 
     def _start_session(
         self, row: dict[str, Any], ip: str | None, user_agent: str | None
@@ -166,68 +237,8 @@ class AuthService:
         row = self.repo.user_by_id(session.user_id)
         if not row or not verify_password(body.current_password, row["password_hash"]):
             raise unauthorized("Current password is incorrect.")
-        self._check_password(body.new_password, row["email"])
+        check_password(body.new_password, row["email"])
         self.repo.set_password(row["user_id"], hash_password(body.new_password))
         self.repo.revoke_user_sessions(row["user_id"], except_session=session.session_id)
         write_auth_event("PASSWORD_CHANGE", user_id=row["user_id"], ip_address=ip)
-
-    # Invitations and resets -------------------------------------------------------------------------------------
-    def invite_preview(self, token: str) -> InvitePreview:
-        invite = self.repo.valid_invite(hash_token(token))
-        if not invite:
-            raise not_found()
-        return InvitePreview(
-            email=invite["email"], display_name=invite["display_name"], role=invite["role_code"],
-            expires_at=invite["expires_at"], kind=invite["kind"],
-        )  # fmt: skip
-
-    def accept(self, body: AcceptInviteRequest, ip: str | None) -> str:
-        invite = self.repo.valid_invite(hash_token(body.token))
-        if not invite:
-            raise not_found()
-        self._check_password(body.password, invite["email"])
-        password_hash = hash_password(body.password)
-
-        if invite["kind"] == "PASSWORD_RESET":
-            user = self.repo.user_by_email(invite["email"])
-            if not user:
-                raise not_found()
-            self.repo.set_password(user["user_id"], password_hash)
-            self.repo.revoke_user_sessions(user["user_id"])
-            self.repo.mark_invite_accepted(invite["invite_id"])
-            write_auth_event(
-                "PASSWORD_CHANGE", user_id=user["user_id"], ip_address=ip, detail={"via": "reset"}
-            )
-            return str(invite["email"])
-
-        user_id = new_uuid()
-        result = self.repo.provision_user(
-            (user_id, invite["email"], body.display_name or invite["display_name"], invite["role_code"],
-             bool(invite["is_admin"]), invite["supervising_doctor_id"], password_hash, invite["invited_by"]),
-        )  # fmt: skip
-        if not result.get("ok"):
-            if result.get("error") == "already_exists":
-                raise conflict("An account with this email already exists.")
-            raise ApiError(ErrorCode.INVALID_REQUEST, "The invitation can no longer be accepted.")
-        if invite["patient_ids"]:
-            granted = self.repo.set_entitlements(
-                user_id, invite["patient_ids"], invite["invited_by"] or user_id
-            )
-            if not granted.get("ok"):
-                raise conflict(
-                    "Some patients on the invitation can no longer be assigned. Ask your admin."
-                )
-        self.repo.mark_invite_accepted(invite["invite_id"])
-        write_auth_event(
-            "INVITE_ACCEPTED", user_id=user_id, actor_id=invite["invited_by"], ip_address=ip
-        )
-        return str(invite["email"])
-
-    @staticmethod
-    def _check_password(password: str, email: str) -> None:
-        problems = password_problems(password, email)
-        if problems:
-            raise invalid(
-                "The password does not meet the rules.",
-                [{"field": "password", "problem": p} for p in problems],
-            )
+        self.mailer.send(password_changed_email(row["display_name"], row["email"]))

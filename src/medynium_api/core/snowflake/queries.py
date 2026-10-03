@@ -1,9 +1,17 @@
 """Parameterised query helpers. Always bind values (%s); identifiers are never built from request data."""
 
 import json
+import re
+import time
 from collections.abc import Sequence
 from datetime import date, datetime
 from typing import Any
+
+import structlog
+
+log = structlog.get_logger()
+SLOW_SQL_SECONDS = 2.0
+_TARGET = re.compile(r"\b(?:FROM|INTO|UPDATE|CALL)\s+([\w.]+)", re.IGNORECASE)
 
 Row = dict[str, Any]
 Params = Sequence[Any] | dict[str, Any] | None
@@ -13,19 +21,36 @@ def _lower(row: dict[str, Any]) -> Row:
     return {key.lower(): value for key, value in row.items()}
 
 
+def _run(cur: Any, sql: str, params: Params) -> float:
+    """Execute and log one statement: verb, first table and duration. Never the bound values."""
+    started = time.perf_counter()
+    verb = sql.lstrip().split(None, 1)[0].upper()
+    target = _TARGET.search(sql)
+    try:
+        cur.execute(sql, params)
+    except Exception as exc:
+        log.error("sql_failed", verb=verb, table=target and target.group(1),
+                  error=type(exc).__name__, ms=round((time.perf_counter() - started) * 1000))  # fmt: skip
+        raise
+    seconds = time.perf_counter() - started
+    emit = log.warning if seconds >= SLOW_SQL_SECONDS else log.info
+    emit("sql", verb=verb, table=target and target.group(1), ms=round(seconds * 1000))
+    return seconds
+
+
 def fetch_all(cur: Any, sql: str, params: Params = None) -> list[Row]:
-    cur.execute(sql, params)
+    _run(cur, sql, params)
     return [_lower(row) for row in cur.fetchall()]
 
 
 def fetch_one(cur: Any, sql: str, params: Params = None) -> Row | None:
-    cur.execute(sql, params)
+    _run(cur, sql, params)
     row = cur.fetchone()
     return _lower(row) if row else None
 
 
 def execute(cur: Any, sql: str, params: Params = None) -> int:
-    cur.execute(sql, params)
+    _run(cur, sql, params)
     return int(cur.rowcount or 0)
 
 
