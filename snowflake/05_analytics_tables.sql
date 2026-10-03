@@ -114,3 +114,19 @@ CREATE TABLE IF NOT EXISTS GOLDEN_RESULT (
   EXPECTED VARCHAR, ACTUAL VARCHAR, ROUTE_EXPECTED VARCHAR, ROUTE_ACTUAL VARCHAR, RESULT VARCHAR,
   PRIMARY KEY (RUN_ID, SEQ)
 ) COMMENT = 'Per-question golden and routing results, failures included.';
+
+-- A clinician's decision on a statement from a safety review (E3). Shared by everyone entitled to the patient, so it
+-- carries PATIENT_RAP (not the own-rows policy). Status changes are audited by the API.
+CREATE TABLE IF NOT EXISTS FINDING (
+  FINDING_ID VARCHAR NOT NULL, PATIENT_ID VARCHAR NOT NULL,
+  ANSWER_ID VARCHAR NOT NULL COMMENT 'The stored answer the statement came from.',
+  CONSIDERATION_ID VARCHAR NOT NULL COMMENT 'The statement id inside that answer, e.g. C1.',
+  SUMMARY VARCHAR NOT NULL COMMENT 'Copy of the statement text at the time it was raised.',
+  STATUS VARCHAR NOT NULL COMMENT 'NEW, ACKNOWLEDGED, FLAGGED, DISMISSED or ESCALATED.',
+  REASON VARCHAR COMMENT 'Required when dismissed.',
+  FOLLOW_UP_ON DATE COMMENT 'Required when flagged.',
+  ASSIGNED_TO VARCHAR COMMENT 'User id of the colleague an escalation went to.',
+  CREATED_BY VARCHAR NOT NULL, CREATED_AT TIMESTAMP_NTZ NOT NULL,
+  UPDATED_BY VARCHAR, UPDATED_AT TIMESTAMP_NTZ,
+  PRIMARY KEY (FINDING_ID)
+) COMMENT = 'Decisions on safety-review statements. Visible to everyone entitled to the patient.';

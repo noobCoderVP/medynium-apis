@@ -5,6 +5,7 @@ from datetime import date
 from typing import Any, NoReturn
 
 from medynium_api.core.access import entitled_patients, log_policy_disagreement
+from medynium_api.core.audit.writer import AuditEntry, write_audit
 from medynium_api.core.config import Settings
 from medynium_api.core.errors import invalid, not_found
 from medynium_api.core.pagination import PageParams
@@ -15,6 +16,7 @@ from medynium_api.features.patients.filters import PatientFilters
 from medynium_api.features.patients.history_repository import HistoryRepository
 from medynium_api.features.patients.mappers import (
     EVENT_TYPES,
+    overview_model,
 )
 from medynium_api.features.patients.mappers import (
     event as _event,
@@ -35,7 +37,6 @@ from medynium_api.features.patients.repository import PatientRepository
 from medynium_api.features.patients.schemas import (
     Claim,
     Claims,
-    Diagnosis,
     LabList,
     LabTrend,
     MedicationList,
@@ -117,17 +118,14 @@ class PatientService:
         data = self.repo.overview(session.snowflake_role, patient_id, self.as_of)
         if data is None:
             self._missing(session, patient_id, started)
-        p = data["patient"]
-        dx = self._json(p["active_diagnoses"]) or []
-        return Overview(
-            patient_id=p["patient_id"], name=p["full_name"], age=int(p["age_years"]), sex=p["sex"], city=p["city"],
-            as_of=date.fromisoformat(self.as_of),
-            diagnoses=[Diagnosis(diagnosis_id=d["diagnosis_id"], description=d["description"], onset_year=d.get("onset_year"), code=d.get("code")) for d in dx],
-            medications=[_medication(m) for m in data["meds"]],
-            latest_labs=[_lab(r) for r in data["labs"]],
-            recent_events=[_event(r) for r in data["events"]],
-            utilization=_utilization(data["utilization"]),
-        )  # fmt: skip
+        return overview_model(data, self.as_of)
+
+    def view(self, session: Session, patient_id: str) -> Overview:
+        """Open a patient: the overview, plus an access-log row so "who looked at this chart?" can be answered."""
+        overview = self.overview(session, patient_id)
+        entry = AuditEntry(action="VIEW_PATIENT", patient_id=patient_id, cost_note="no model call")
+        write_audit(session, entry)
+        return overview
 
     def share(self, session: Session, patient_id: str, body: ShareRequest) -> ShareResult:
         """Email a summary. The overview load is the entitlement check: denied or missing is the same 404."""

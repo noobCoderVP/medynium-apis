@@ -30,6 +30,7 @@ from medynium_api.features.copilot import prompts
 from medynium_api.features.copilot.answers import finalize
 from medynium_api.features.copilot.pack import focus_terms, patient_evidence, render, sources, when
 from medynium_api.features.copilot.repository import CopilotRepository, Facts
+from medynium_api.features.copilot.rules import allergy_conflicts
 
 log = structlog.get_logger()
 GAP_ONLY = (
@@ -46,6 +47,11 @@ def parse_json(text: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError("not a JSON object")
     return value
+
+
+def unindexed_medicines(facts: Facts) -> frozenset[str]:
+    """Evidence ids of medicines with no indexed label. Medicines come first in the pack, in order (pack.py)."""
+    return frozenset(f"P{i}" for i, m in enumerate(facts.meds, start=1) if not m["drug_id"])
 
 
 class SafetyReview:
@@ -118,7 +124,9 @@ class SafetyReview:
                 step.detail = f"{completion.model}, {completion.completion_tokens or '?'} tokens"
         with run.step("Checking each statement against its evidence") as step:
             try:
-                validated = validate_statements(draft, bundle, patient_id, kinds)
+                validated = validate_statements(
+                    draft, bundle, patient_id, kinds, unindexed_medicines(facts)
+                )
             except AnswerRejected as exc:
                 log.error("answer_rejected", reason=str(exc))
                 raise ApiError(
@@ -126,6 +134,16 @@ class SafetyReview:
                     "The review could not be verified and was not shown.",
                 ) from exc
             step.detail = f"{len(validated.considerations)} kept, {len(validated.dropped)} removed"
+        with run.step("Running fixed rules on the record") as step:
+            hits = allergy_conflicts(facts, bundle)
+            if hits:  # rule findings lead, then the model's statements; ids are renumbered together
+                validated.considerations = [*hits, *validated.considerations]
+                for number, item in enumerate(validated.considerations, start=1):
+                    item.id = f"C{number}"
+                validated.rule_hits = len(hits)
+            step.detail = (
+                f"{len(hits)} allergy match(es)" if facts.allergies else "no allergies recorded"
+            )
 
         short = (
             short_answer(validated, checked) if (drugs or validated.considerations) else GAP_ONLY
@@ -189,6 +207,10 @@ class SafetyReview:
         if validated.dropped:
             notes.append(
                 f"{len(validated.dropped)} drafted statement(s) were removed because the evidence did not back them."
+            )
+        if validated.rule_hits:
+            notes.append(
+                f"{validated.rule_hits} conclusion(s) came from a fixed rule on the record, not from the model."
             )
         if validated.advice_seen:
             notes.append("This tool does not recommend, start, stop or dose medicines.")

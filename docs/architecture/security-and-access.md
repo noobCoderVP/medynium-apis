@@ -34,14 +34,15 @@ There is no shared account that can see every patient serving requests (SEC-03).
 | Verification | Access tokens are verified without a database call. Refresh, login and invites hit Snowflake. |
 | Revocation | Disabling a user or changing a password bumps `TOKEN_VERSION` and revokes sessions. Refresh fails at once; an already-issued access token stays valid for up to 15 minutes. A short in-process cache of `TOKEN_VERSION` per user (30 s) can close that gap if needed. |
 | CSRF | `SameSite=Lax` plus a required `X-Medynium-Client: web` header on every non-GET request. |
-| MFA | Not in scope for the hackathon build. Documented as the first hardening step. |
+| Second step | Optional (`LOGIN_OTP_ENABLED`, off by default): a six-digit code emailed after the password is accepted. This is only as strong as the mailbox. Authenticator-app (TOTP) or WebAuthn and single sign-on are not built and remain the first hardening step. |
+| Emailed summaries | A clinician can email one patient summary to one recipient. `SHARE_ALLOWED_DOMAINS` (comma separated; empty means any) restricts recipients. The audit row records the recipient's **domain**, never the address or the body, and a refused domain is audited as `REFUSED`. Email is not a secure channel. |
 
 Why not a managed identity provider: you chose Snowflake-backed accounts (see ADR-002). The cost is that we own the password and session code, so it is deliberately small and listed in the test plan.
 
 ## 4. Onboarding: admin invites only
 
 1. An admin (a doctor with `IS_ADMIN`) calls `POST /admin/invites` with email, role and optional patient list.
-2. The API stores a `USER_INVITE` row with the SHA-256 of a one-time token (valid 72 hours) and returns an accept link. No email system is required; the admin shares the link. Email delivery is an optional later add-on.
+2. The API stores a `USER_INVITE` row with the SHA-256 of a one-time token (valid 72 hours) and returns an accept link. The admin shares the link. When `RESEND_API_KEY` is set the app can also email invitations, reset links, sign-in codes and patient summaries; without it the app runs and sends nothing.
 3. The invitee opens the link, sets a password, and the API calls `SECURITY.PROVISION_USER` (see below), creating the user row, the Snowflake role `U_<user_id>` and its grants.
 4. The invitee signs in normally.
 

@@ -113,6 +113,7 @@ Agent instructions (fixed): decision support only; one patient; tag every statem
 | `patient_fact` | At least one `patient_evidence` id | Value and date |
 | `retrieved_source` | At least one `source_evidence` id | Section and version |
 | `ai_synthesis` | Both kinds, worded "may warrant clinician review" | Synthesis badge |
+| `rule_check` | Patient evidence only. Made by a fixed rule in code (`features/copilot/rules.py`), never by the model; the validator drops this tag from model output. Today: a recorded allergy whose substance is also a current medicine | Rule check badge |
 
 The validator removes any statement whose evidence is empty or whose tag does not match its evidence (AI-02, AI-09), rejects an answer whose SQL touches another patient, and records what it dropped in the audit entry. If no source evidence exists, the answer is "No documented consideration found in the indexed sources" plus what was checked, never "no risk" (AI-03). Conflicting sources are listed side by side with version and date (AI-06).
 

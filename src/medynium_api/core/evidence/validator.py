@@ -8,7 +8,9 @@ Rules (build-plan 04, section 5):
   4. prescribing, dosing or diagnosis advice is dropped;
   5. the short answer is built here from what survived, never taken from the model, and "no documented consideration
      found in the indexed sources" is never written as "no risk";
-  6. SQL that does not name the one patient in scope rejects the whole answer.
+  6. SQL that does not name the one patient in scope rejects the whole answer;
+  7. a conclusion that rests only on medicines with no indexed label is dropped. Those medicines were not checked, so
+     a "documented consideration" about them can only be the model's own words (the honest gap is code, not behaviour).
 """
 
 import re
@@ -49,6 +51,9 @@ class Validated:
     injection_seen: bool = False
     advice_seen: bool = False
     matched_sources: set[str] = field(default_factory=set)
+    rule_hits: int = (
+        0  # conclusions made by a code rule (not the model), counted in the short answer
+    )
 
     @property
     def has_source_statement(self) -> bool:
@@ -67,6 +72,7 @@ def validate_statements(
     bundle: EvidenceBundle,
     patient_id: str,
     kinds: dict[str, str] | None = None,
+    unindexed: frozenset[str] = frozenset(),
 ) -> Validated:
     check_scope(bundle, patient_id)
     patient_ids = {p.evidence_id for p in bundle.patient_records}
@@ -114,8 +120,14 @@ def validate_statements(
                 drop('synthesis must be worded "may warrant clinician review"')
                 continue
             if kinds is not None:
+                cited_meds = [e for e in p if kinds.get(e) == "medication"]
+                if cited_meds and all(e in unindexed for e in cited_meds):
+                    drop(
+                        "the only medicines it rests on have no indexed label, so they were not checked"
+                    )
+                    continue
                 abnormal = any(kinds.get(e) == "abnormal_lab" for e in p)
-                meds = sum(1 for e in p if kinds.get(e) == "medication")
+                meds = len(cited_meds)
                 if not (abnormal or meds >= 2):
                     drop(
                         "a conclusion needs an abnormal lab or an interaction between listed medicines"
@@ -160,7 +172,9 @@ def _keep_only_used_premises(result: Validated) -> None:
 
 def short_answer(validated: Validated, checked_drugs: list[str]) -> str:
     """Built from what survived validation, never taken from the model (AI-03: silence is not safety)."""
-    synthesis = sum(1 for c in validated.considerations if c.tag == "ai_synthesis")
+    synthesis = (
+        sum(1 for c in validated.considerations if c.tag == "ai_synthesis") + validated.rule_hits
+    )
     if synthesis:
         noun = "consideration" if synthesis == 1 else "considerations"
         return f"{synthesis} documented {noun} may warrant clinician review."

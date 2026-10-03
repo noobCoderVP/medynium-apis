@@ -2,7 +2,8 @@
 
 The summary is built from the same entitled overview the caller can already open, so an email can never carry
 more than the sender could see. The audit row records that a summary left, for which patient and which sections,
-and never the recipient address or the body.
+the recipient's domain (never the full address) and never the body. Domains can be restricted with
+SHARE_ALLOWED_DOMAINS.
 """
 
 from collections.abc import Sequence
@@ -10,7 +11,7 @@ from collections.abc import Sequence
 from medynium_api.core.audit.writer import AuditEntry, write_audit
 from medynium_api.core.config import Settings
 from medynium_api.core.email import Mailer, get_mailer, patient_summary_email
-from medynium_api.core.errors import ApiError, ErrorCode
+from medynium_api.core.errors import ApiError, ErrorCode, invalid
 from medynium_api.core.security.ratelimit import RateLimiter
 from medynium_api.core.session import Session
 from medynium_api.features.patients.repository import PatientRepository
@@ -75,6 +76,20 @@ class SharingService:
     def send(self, session: Session, overview: Overview, body: ShareRequest) -> ShareResult:
         """`overview` was loaded through the entitlement gate, so reaching this point means access was granted."""
         share_limiter.check(f"share:{session.user_id}")
+        domain = body.to.rsplit("@", 1)[-1]
+        allowed = self.settings.share_domain_list
+        if allowed and domain not in allowed:
+            write_audit(
+                session,
+                AuditEntry(
+                    action="EMAIL_SUMMARY", outcome="REFUSED", patient_id=overview.patient_id,
+                    outcome_detail=f"domain_not_allowed={domain}",
+                ),
+            )  # fmt: skip
+            raise invalid(
+                "Summaries can only be emailed to approved domains. Ask an administrator to add this one.",
+                [{"field": "to", "problem": "domain not approved"}],
+            )
         sender = self.repo.sender_name(session.user_id) or "A Medynium clinician"
         link = f"{self.settings.public_app_url.rstrip('/')}/patients/{overview.patient_id}"
         message = patient_summary_email(
@@ -87,7 +102,7 @@ class SharingService:
                 action="EMAIL_SUMMARY",
                 outcome="OK" if sent else "ERROR",
                 patient_id=overview.patient_id,
-                outcome_detail=f"sections={','.join(body.include)}",
+                outcome_detail=f"domain={domain}; sections={','.join(body.include)}",
             ),
         )
         if not sent:

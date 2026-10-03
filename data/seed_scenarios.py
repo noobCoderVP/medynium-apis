@@ -18,6 +18,7 @@ from sfadmin import build_vars, connect  # noqa: E402
 
 SCENARIOS = Path(__file__).resolve().parent / "scenarios" / "scenarios.yaml"
 TABLES = [
+    "ALLERGY",
     "CLAIM",
     "CLINICAL_NOTE",
     "PROCEDURE",
@@ -192,6 +193,11 @@ def main() -> None:
             "INSERT INTO CLINICAL.DIAGNOSIS (DIAGNOSIS_ID, PATIENT_ID, CODE_SYSTEM, CODE, DESCRIPTION, ONSET_DATE, IS_ACTIVE) VALUES (%s,%s,'SNOMED-CT',%s,%s,%s,TRUE)",
             [(x["id"], p["id"], x["code"], x["desc"], d(x["onset"])) for x in p["diagnoses"]],
         )
+        cur.executemany(
+            "INSERT INTO CLINICAL.ALLERGY (ALLERGY_ID, PATIENT_ID, SUBSTANCE, REACTION, SEVERITY, IS_ACTIVE, RECORDED_ON, SOURCE) "
+            "VALUES (%s,%s,%s,%s,%s,TRUE,%s,'SEED')",
+            [(a["id"], p["id"], a["substance"], a["reaction"], a["severity"], d(a["recorded"])) for a in p.get("allergies", [])],
+        )  # fmt: skip
         cur.executemany(
             "INSERT INTO CLINICAL.MEDICATION (MEDICATION_ID, PATIENT_ID, RXNORM_CODE, DESCRIPTION, DRUG_NAME, STRENGTH_TEXT, DOSE_TEXT, START_DATE, IS_ACTIVE, LAST_CHANGE_DATE, CHANGE_NOTE) "
             "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,TRUE,%s,%s)",

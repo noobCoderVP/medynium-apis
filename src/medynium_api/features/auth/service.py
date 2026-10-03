@@ -57,10 +57,8 @@ class Tokens:
 
 def permissions_for(role: str, is_admin: bool) -> list[str]:
     perms = ["patients:read", "copilot:ask", "agent:actions"]
-    if role == "DOCTOR":
-        perms.append("golden:run")
-        if is_admin:
-            perms.append("admin:users")
+    if role == "DOCTOR" and is_admin:
+        perms.append("admin:users")
     return perms
 
 

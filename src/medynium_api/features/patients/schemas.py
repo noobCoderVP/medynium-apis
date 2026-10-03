@@ -115,6 +115,13 @@ class Utilization(BaseModel):
     approved: Money
 
 
+class Allergy(BaseModel):
+    allergy_id: str
+    substance: str
+    reaction: str | None
+    severity: str | None
+
+
 class Overview(BaseModel):
     patient_id: str
     name: str
@@ -122,6 +129,7 @@ class Overview(BaseModel):
     sex: str
     city: str | None
     as_of: dt.date
+    allergies: list[Allergy]
     diagnoses: list[Diagnosis]
     medications: list[Medication]
     latest_labs: list[LabLatest]

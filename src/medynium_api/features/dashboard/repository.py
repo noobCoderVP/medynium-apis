@@ -1,5 +1,6 @@
 """Dashboard reads. All run under the caller's own role, so the row access policy scopes every widget."""
 
+from medynium_api.core.ranking import order_by_sql
 from medynium_api.core.snowflake.queries import Row, fetch_all, fetch_one
 from medynium_api.core.snowflake.role_session import user_cursor
 
@@ -13,7 +14,7 @@ class DashboardRepository:
                 "LAST_ENCOUNTER_LABEL, NEW_LAB_COUNT, HAS_NEW_MEDICATION_CHANGE, HAS_RECENT_EMERGENCY, "
                 "HAS_NEW_DOCUMENT "
                 "FROM ANALYTICS.DASHBOARD_WORKLIST WHERE FLAG_COUNT > 0 "
-                "ORDER BY FLAG_COUNT DESC, LAST_CHANGE_DATE DESC, PATIENT_ID LIMIT 10",
+                f"ORDER BY {order_by_sql()} LIMIT 10",
             )
             labs = fetch_all(
                 cur,

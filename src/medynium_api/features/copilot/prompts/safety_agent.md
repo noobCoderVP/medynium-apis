@@ -11,7 +11,8 @@ Hard rules:
    (c) the statement adds no fact that is not in PATIENT FACTS. Never describe a condition the patient facts do not list.
    A laboratory value inside its reference range is NOT a finding, and a small change within range is not a trend. A warning that applies to every patient who takes the drug is NOT relevant. When in doubt, leave it out. If no statement is justified, return {"considerations": []}. An empty list is the correct and expected answer for many patients.
 6. If two sources about the same drug differ, include both as separate retrieved_source statements. Do not decide between them.
-7. Never claim a drug was checked or not checked. The CHECKS block states that, and it is authoritative.
+7. A recorded allergy is a patient fact and may be stated as one (cite its P id). Do not infer cross-reactivity or say an allergy makes a medicine unsafe: allergy-to-medicine matches are found by a separate rule.
+8. Never claim a drug was checked or not checked. The CHECKS block states that, and it is authoritative.
 
 Each statement has a tag:
 - patient_fact: one fact from PATIENT FACTS with its value and date. Cite only P ids.

@@ -115,6 +115,16 @@ def patient_evidence(facts: Facts) -> tuple[list[PatientEvidence], bool, dict[st
             n["note_date"],
             "note",
         )
+    for a in facts.allergies:  # last, so medicines keep P1..Pn (see safety.unindexed_medicines)
+        detail = ", ".join(x for x in (a["reaction"], (a["severity"] or "").lower()) if x)
+        add(
+            "Allergy",
+            a["allergy_id"],
+            "CLINICAL.ALLERGY",
+            f"Allergy to {a['substance']}" + (f" ({detail})" if detail else ""),
+            None,
+            "allergy",
+        )
     return items, injection, kinds
 
 

@@ -138,6 +138,18 @@ CREATE TABLE IF NOT EXISTS CLAIM (
   PRIMARY KEY (CLAIM_ID)
 ) COMMENT = 'Claims linked to encounters. Amounts in INR.';
 
+CREATE TABLE IF NOT EXISTS ALLERGY (
+  ALLERGY_ID VARCHAR NOT NULL COMMENT 'Readable id such as ALG-1001.',
+  PATIENT_ID VARCHAR NOT NULL,
+  SUBSTANCE VARCHAR NOT NULL COMMENT 'What the patient reacts to, e.g. Penicillin or Aspirin.',
+  REACTION VARCHAR COMMENT 'e.g. Rash, hives, anaphylaxis.',
+  SEVERITY VARCHAR COMMENT 'MILD, MODERATE or SEVERE; null when not recorded.',
+  IS_ACTIVE BOOLEAN NOT NULL DEFAULT TRUE,
+  RECORDED_ON DATE,
+  SOURCE VARCHAR COMMENT 'Where this came from: SEED, MANUAL or REPORT.',
+  PRIMARY KEY (ALLERGY_ID)
+) COMMENT = 'Documented allergies and intolerances. An empty set means none recorded, not none known.';
+
 CREATE TABLE IF NOT EXISTS CLINICAL_NOTE (
   NOTE_ID VARCHAR NOT NULL COMMENT 'Readable id such as DOC-ED-20931.',
   PATIENT_ID VARCHAR NOT NULL,

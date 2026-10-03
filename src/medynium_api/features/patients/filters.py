@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from medynium_api.core.ranking import score_sql
+
 
 @dataclass(frozen=True)
 class PatientFilters:
@@ -19,7 +21,7 @@ PATIENT_SORTS = {
     "name": "w.FULL_NAME",
     "age": "w.AGE_YEARS",
     "last_encounter": "w.LAST_ENCOUNTER_DATE",
-    "flags": "w.FLAG_COUNT",
+    "flags": f"({score_sql('w.')})",
 }
 FLAG_COLUMNS = {
     "NEW_LAB": "w.NEW_LAB_COUNT > 0",

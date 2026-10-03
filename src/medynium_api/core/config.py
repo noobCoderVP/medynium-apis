@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     resend_api_key: SecretStr | None = None
     email_from: str = "Medynium <onboarding@resend.dev>"  # use a verified domain in production
     email_reply_to: str | None = None
+    # Patient summaries may only be emailed to these domains (comma separated). Empty means any domain.
+    share_allowed_domains: str = ""
     # Second step at sign-in: a six-digit code emailed after the password is accepted.
     login_otp_enabled: bool = False
     otp_minutes: int = 10
@@ -62,6 +64,14 @@ class Settings(BaseSettings):
     router_confidence_threshold: float = 0.7
     router_timeout_seconds: float = 5.0
     agent_timeout_seconds: float = 30.0
+
+    @property
+    def share_domain_list(self) -> list[str]:
+        return [
+            d.strip().lower().lstrip("@")
+            for d in self.share_allowed_domains.split(",")
+            if d.strip()
+        ]
 
     @property
     def cors_origin_list(self) -> list[str]:

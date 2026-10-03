@@ -5,9 +5,13 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
+import structlog
+
 from medynium_api.core.evidence.models import SqlEvidence
 from medynium_api.core.snowflake.queries import Row, explain_sql, fetch_all, fetch_one, json_value
 from medynium_api.core.snowflake.role_session import user_cursor
+
+log = structlog.get_logger()
 
 
 @dataclass
@@ -18,6 +22,7 @@ class Facts:
     meds: list[Row]
     labs: list[Row]
     notes: list[Row]
+    allergies: list[Row] = field(default_factory=list)
     sql: list[SqlEvidence] = field(default_factory=list)
 
 
@@ -64,9 +69,19 @@ class CopilotRepository:
                 "WHERE PATIENT_ID = %s ORDER BY NOTE_DATE DESC, NOTE_ID LIMIT 2",
                 (patient_id,),
             )  # fmt: skip
+            try:  # before the allergy table exists the review still runs, without allergies
+                allergies = run(
+                    cur, fetch_all,
+                    "SELECT ALLERGY_ID, SUBSTANCE, REACTION, SEVERITY FROM CLINICAL.ALLERGY "
+                    "WHERE PATIENT_ID = %s AND IS_ACTIVE ORDER BY SUBSTANCE",
+                    (patient_id,),
+                )  # fmt: skip
+            except Exception as exc:
+                log.warning("allergy_read_failed", error=type(exc).__name__)
+                allergies = []
         return Facts(
             patient_id=patient_id, name=head["full_name"], diagnoses=list(json_value(head["active_diagnoses"]) or [])[:6],
-            meds=meds, labs=labs, notes=notes, sql=recorded,
+            meds=meds, labs=labs, notes=notes, allergies=allergies, sql=recorded,
         )  # fmt: skip
 
 

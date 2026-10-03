@@ -38,7 +38,7 @@ Three widgets from precomputed views, scoped by the row access policy to the cal
 }
 ```
 
-`worklist` is limited to the 10 most recently changed patients; use `GET /patients` for the full list.
+`worklist` is limited to 10 patients, **ranked before the cut**: a recent emergency visit outranks everything, then new labs, then a medicine change, then a new document; ties go to more flags, then the most recent change (`core/ranking.py`). `GET /patients` with `sort=flags` uses the same order, and lists everyone.
 
 ## `GET /patients`
 
@@ -60,7 +60,7 @@ Powers the worklist page and the top-bar patient search. Sorted by most recent e
 
 ## `GET /patients/{patient_id}`
 
-The Patient 360 overview (FR-02). Each value carries its date and source table.
+The Patient 360 overview (FR-02). Each value carries its date and source table. Opening a patient writes a `VIEW_PATIENT` audit row. `allergies` lists active allergies, most severe first; an empty list means none are recorded, not none known.
 
 ```json
 {
@@ -70,6 +70,9 @@ The Patient 360 overview (FR-02). Each value carries its date and source table.
   "sex": "M",
   "city": "Ahmedabad",
   "as_of": "2026-10-02",
+  "allergies": [
+    { "allergy_id": "ALG-1001", "substance": "Sulfonamide antibiotics", "reaction": "Rash", "severity": "MODERATE" }
+  ],
   "diagnoses": [
     { "diagnosis_id": "DX-3355", "description": "Chronic kidney disease, stage 3b", "onset_year": 2025, "source": "CLINICAL.DIAGNOSIS" }
   ],
@@ -189,3 +192,37 @@ Pinned evidence shown on the patient workspace. Created by the user's pin icon o
 ### `DELETE /patients/{patient_id}/pins/{pin_id}`
 
 `204`. Users can delete only their own pins.
+
+## Findings
+
+A clinician's decision on a statement from a safety review. Only a signed-in user raises or changes one; the agent cannot. Findings are shared by everyone entitled to the patient. Every raise and decision is audited (`RAISE_FINDING`, `DECIDE_FINDING`). Denied and missing patients and findings return the standard `404`.
+
+### `GET /patients/{patient_id}/findings`
+
+```json
+{
+  "open_count": 1,
+  "items": [
+    {
+      "finding_id": "FND-3A9C0D12", "patient_id": "P-1042", "answer_id": "ANS-0004", "consideration_id": "C3",
+      "summary": "A low eGFR with metformin may warrant clinician review.",
+      "status": "NEW", "reason": null, "follow_up_on": null, "assigned_to": null, "assigned_to_name": null,
+      "created_by_name": "Dr. Sharma", "created_at": "2026-10-03T09:10:00Z", "updated_at": null
+    }
+  ]
+}
+```
+
+Open means `NEW`, `FLAGGED` or `ESCALATED`; open findings come first.
+
+### `POST /patients/{patient_id}/findings`
+
+`{ "answer_id": "ANS-0004", "consideration_id": "C3" }` creates a `NEW` finding from a statement in one of the caller's own answers about this patient (the text is copied server-side, never taken from the request). `201` with the finding. Repeating the same request returns the same finding. `404` if the answer is not the caller's, is about another patient, or has no such statement.
+
+### `PATCH /findings/{finding_id}`
+
+`{ "status": "...", "reason": "...", "follow_up_on": "2026-10-10", "assigned_to": "<user id>" }`. Rules: `DISMISSED` needs a `reason`; `FLAGGED` needs a `follow_up_on` of today or later; `ESCALATED` needs an `assigned_to` who currently has this patient and is not the caller; the status must change (except re-flagging with a new date). `NEW` re-opens. Violations return `422 invalid_request` with a `details` list.
+
+### `GET /patients/{patient_id}/colleagues`
+
+Other active users who currently have this patient: `{ "items": [{ "user_id", "name", "role" }] }`. The choices for an escalation.

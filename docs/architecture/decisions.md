@@ -57,7 +57,7 @@ FastAPI generates `docs/api/openapi.json`; the UI generates its types from it; C
 No Opus-class models. Router: `llama3.1-8b`. Strong route: `claude-sonnet-4-6`. Verified available on the account (Azure Central India).
 
 ### ADR-013: Audit writes are synchronous for denials and agent actions. Proposed
-Inserted before the response completes so a crash cannot lose them. Read-only page views are not audited.
+Inserted before the response completes so a crash cannot lose them. **Amended 2026-10-03:** opening a patient (`GET /patients/{id}`) now writes a `VIEW_PATIENT` row, so "who looked at this chart?" can be answered. Other read-only list and tab views are still not audited, to keep volume down; revisit if a privacy review asks for per-tab access logs. Users still see only their own rows; an organisation-wide auditor view is not built.
 - **Cost:** roughly one extra Snowflake round trip per audited request.
 
 ### ADR-014: UI on Cloud Run with the `/api` rewrite kept. Accepted

@@ -120,6 +120,9 @@ A doctor reads their own rows; admins read all rows through a separate reporting
 
 `PIN_ID`, `USER_ID`, `PATIENT_ID`, `ANSWER_ID`, `EVIDENCE_ID`, `NOTE`, `CREATED_AT`. Created by the `pin_evidence` action or the pin icon. A user reads only their own pins.
 
+### FINDING
+A clinician's decision on a safety-review statement: `STATUS` (NEW, ACKNOWLEDGED, FLAGGED, DISMISSED, ESCALATED), `REASON` (required to dismiss), `FOLLOW_UP_ON` (required to flag), `ASSIGNED_TO` (a colleague who has the patient, required to escalate), plus who raised and last changed it and when. Shared by everyone entitled to the patient, so it carries `PATIENT_RAP`, not the own-rows policy. `MED_DOCTOR` and `MED_ASSISTANT` can insert and update it; only the API's findings feature does. Create with `db.py apply 05`, `06`, `60`.
+
 ### SAVED_VIEW (P1)
 
 `VIEW_ID`, `USER_ID`, `PATIENT_ID`, `KIND` (`SAVED_VIEW`, `VISIT_BRIEF`), `TITLE`, `CONTENT` (VARIANT), `APPROVED_AT`, `CREATED_AT`. Written only after the user approves a preview (FR-22). The agent role has no write privilege on any `CLINICAL` table.

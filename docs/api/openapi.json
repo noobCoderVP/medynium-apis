@@ -943,7 +943,7 @@
           "patients"
         ],
         "summary": "Get Patient",
-        "description": "Patient 360 overview. 404 if the patient is missing or the caller is not entitled.",
+        "description": "Patient 360 overview. 404 if the patient is missing or the caller is not entitled. Opening a chart is audited.",
         "operationId": "get_patient_patients__patient_id__get",
         "parameters": [
           {
@@ -2182,6 +2182,276 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/findings": {
+      "get": {
+        "tags": [
+          "findings"
+        ],
+        "summary": "List Findings",
+        "description": "Decisions recorded on this patient's review statements, open ones first.",
+        "operationId": "list_findings_patients__patient_id__findings_get",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FindingList"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "findings"
+        ],
+        "summary": "Raise Finding",
+        "description": "Raise a finding from a statement in one of the caller's own answers. Repeating returns the same finding.",
+        "operationId": "raise_finding_patients__patient_id__findings_post",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindingCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Finding"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/colleagues": {
+      "get": {
+        "tags": [
+          "findings"
+        ],
+        "summary": "Colleagues",
+        "description": "Other active users who have this patient: the people a finding can be escalated to.",
+        "operationId": "colleagues_patients__patient_id__colleagues_get",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ColleagueList"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/findings/{finding_id}": {
+      "patch": {
+        "tags": [
+          "findings"
+        ],
+        "summary": "Decide Finding",
+        "description": "Acknowledge, flag (with a follow-up date), dismiss (with a reason) or escalate (to a colleague).",
+        "operationId": "decide_finding_findings__finding_id__patch",
+        "parameters": [
+          {
+            "name": "finding_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Finding Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindingUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Finding"
+                }
+              }
+            }
           },
           "401": {
             "content": {
@@ -4089,6 +4359,48 @@
         ],
         "title": "ActionResponse"
       },
+      "Allergy": {
+        "properties": {
+          "allergy_id": {
+            "type": "string",
+            "title": "Allergy Id"
+          },
+          "substance": {
+            "type": "string",
+            "title": "Substance"
+          },
+          "reaction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reaction"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "allergy_id",
+          "substance",
+          "reaction",
+          "severity"
+        ],
+        "title": "Allergy"
+      },
       "AnswerObject": {
         "properties": {
           "answer_id": {
@@ -4746,6 +5058,45 @@
         ],
         "title": "Claims"
       },
+      "Colleague": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "name",
+          "role"
+        ],
+        "title": "Colleague"
+      },
+      "ColleagueList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Colleague"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ColleagueList"
+      },
       "ConflictItem": {
         "properties": {
           "drug": {
@@ -4800,7 +5151,8 @@
             "enum": [
               "patient_fact",
               "retrieved_source",
-              "ai_synthesis"
+              "ai_synthesis",
+              "rule_check"
             ],
             "title": "Tag"
           },
@@ -5171,6 +5523,234 @@
           "snapshot_date"
         ],
         "title": "EvidenceResponse"
+      },
+      "Finding": {
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "title": "Finding Id"
+          },
+          "patient_id": {
+            "type": "string",
+            "title": "Patient Id"
+          },
+          "answer_id": {
+            "type": "string",
+            "title": "Answer Id"
+          },
+          "consideration_id": {
+            "type": "string",
+            "title": "Consideration Id"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "ACKNOWLEDGED",
+              "FLAGGED",
+              "DISMISSED",
+              "ESCALATED"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "follow_up_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Follow Up On"
+          },
+          "assigned_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To"
+          },
+          "assigned_to_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To Name"
+          },
+          "created_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "finding_id",
+          "patient_id",
+          "answer_id",
+          "consideration_id",
+          "summary",
+          "status",
+          "reason",
+          "follow_up_on",
+          "assigned_to",
+          "assigned_to_name",
+          "created_by_name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "Finding"
+      },
+      "FindingCreate": {
+        "properties": {
+          "answer_id": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 3,
+            "title": "Answer Id"
+          },
+          "consideration_id": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Consideration Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "answer_id",
+          "consideration_id"
+        ],
+        "title": "FindingCreate",
+        "description": "Raise a finding from one statement of one of the caller's own answers."
+      },
+      "FindingList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "open_count": {
+            "type": "integer",
+            "title": "Open Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "open_count"
+        ],
+        "title": "FindingList"
+      },
+      "FindingUpdate": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "ACKNOWLEDGED",
+              "FLAGGED",
+              "DISMISSED",
+              "ESCALATED"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "follow_up_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Follow Up On"
+          },
+          "assigned_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned To"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "FindingUpdate",
+        "description": "A decision. Dismissing needs a reason, flagging needs a follow-up date, escalating needs a colleague."
       },
       "Flag": {
         "properties": {
@@ -6269,6 +6849,13 @@
             "format": "date",
             "title": "As Of"
           },
+          "allergies": {
+            "items": {
+              "$ref": "#/components/schemas/Allergy"
+            },
+            "type": "array",
+            "title": "Allergies"
+          },
           "diagnoses": {
             "items": {
               "$ref": "#/components/schemas/Diagnosis"
@@ -6314,6 +6901,7 @@
           "sex",
           "city",
           "as_of",
+          "allergies",
           "diagnoses",
           "medications",
           "latest_labs",

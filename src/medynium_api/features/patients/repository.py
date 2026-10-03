@@ -5,6 +5,8 @@ small lookups: data comes from the ANALYTICS read models (NFR-11)."""
 from datetime import date
 from typing import Any
 
+import structlog
+
 from medynium_api.core.pagination import like, order_clause
 from medynium_api.core.snowflake.queries import Row, fetch_all, fetch_one
 from medynium_api.core.snowflake.role_session import service_cursor, user_cursor
@@ -16,6 +18,8 @@ from medynium_api.features.patients.filters import (
     PatientFilters,
 )
 
+log = structlog.get_logger()
+
 
 def _visible(cur: Any, patient_id: str) -> Row | None:
     return fetch_one(
@@ -24,6 +28,22 @@ def _visible(cur: Any, patient_id: str) -> Row | None:
         "WHERE PATIENT_ID = %s",
         (patient_id,),
     )
+
+
+def active_allergies(cur: Any, patient_id: str) -> list[Row]:
+    """Active allergies, worst first. Before `db.py apply 03` creates the table this returns none (and logs) rather
+    than taking the whole patient page down."""
+    try:
+        return fetch_all(
+            cur,
+            "SELECT ALLERGY_ID, SUBSTANCE, REACTION, SEVERITY FROM CLINICAL.ALLERGY "
+            "WHERE PATIENT_ID = %s AND IS_ACTIVE "
+            "ORDER BY DECODE(SEVERITY, 'SEVERE', 0, 'MODERATE', 1, 2), SUBSTANCE",
+            (patient_id,),
+        )
+    except Exception as exc:
+        log.warning("allergy_read_failed", error=type(exc).__name__)
+        return []
 
 
 class PatientRepository:
@@ -99,7 +119,9 @@ class PatientRepository:
                 "FROM ANALYTICS.UTILIZATION WHERE PATIENT_ID = %s",
                 (patient_id,),
             )
+            allergies = active_allergies(cur, patient_id)
         return {
+            "allergies": allergies,
             "patient": patient,
             "meds": meds,
             "labs": labs,

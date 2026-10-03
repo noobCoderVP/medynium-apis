@@ -1,12 +1,17 @@
 """Row-to-schema mapping for the patient reads (precomputed rows in, API shapes out)."""
 
 import json
+from datetime import date
 from typing import Any
 
 from medynium_api.core.schemas import Money
+from medynium_api.core.snowflake.queries import json_value
 from medynium_api.features.patients.schemas import (
+    Allergy,
+    Diagnosis,
     LabLatest,
     Medication,
+    Overview,
     PreviousValue,
     Reference,
     TimelineEvent,
@@ -62,4 +67,20 @@ def medication(r: dict[str, Any]) -> Medication:
         dose=r["dose_text"], strength=r["strength_text"], started=r["start_date"], stopped=r["stop_date"],
         last_change_date=r["last_change_date"], change=r["change_note"], in_knowledge_base=bool(r["in_kb"]),
         also_sold_as=[str(b).title() for b in (brands or [])],
+    )  # fmt: skip
+
+
+def overview_model(data: dict[str, Any], as_of: str) -> Overview:
+    """The Patient 360 shape from the repository's rows."""
+    p = data["patient"]
+    dx = json_value(p["active_diagnoses"]) or []
+    return Overview(
+        patient_id=p["patient_id"], name=p["full_name"], age=int(p["age_years"]), sex=p["sex"], city=p["city"],
+        as_of=date.fromisoformat(as_of),
+        allergies=[Allergy(allergy_id=a["allergy_id"], substance=a["substance"], reaction=a["reaction"], severity=a["severity"]) for a in data.get("allergies", [])],
+        diagnoses=[Diagnosis(diagnosis_id=d["diagnosis_id"], description=d["description"], onset_year=d.get("onset_year"), code=d.get("code")) for d in dx],
+        medications=[medication(m) for m in data["meds"]],
+        latest_labs=[lab(r) for r in data["labs"]],
+        recent_events=[event(r) for r in data["events"]],
+        utilization=utilization(data["utilization"]),
     )  # fmt: skip

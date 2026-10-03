@@ -58,8 +58,8 @@ def list_patients(
 
 @router.get("/patients/{patient_id}")
 def get_patient(patient_id: str, session: CurrentSession, service: Service) -> Overview:
-    """Patient 360 overview. 404 if the patient is missing or the caller is not entitled."""
-    return service.overview(session, patient_id)
+    """Patient 360 overview. 404 if the patient is missing or the caller is not entitled. Opening a chart is audited."""
+    return service.view(session, patient_id)
 
 
 @router.post("/patients/{patient_id}/share", responses={503: {"model": ErrorBody}})

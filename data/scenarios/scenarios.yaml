@@ -17,6 +17,8 @@ patients:
       - {id: DX-3301, desc: Type 2 diabetes mellitus, onset: 2019-03-12, code: "44054006"}
       - {id: DX-3355, desc: "Chronic kidney disease, stage 3b", onset: 2025-11-04, code: "700379002"}
       - {id: DX-3290, desc: Hypertension, onset: 2016-05-02, code: "38341003"}
+    allergies:
+      - {id: ALG-1001, substance: Sulfonamide antibiotics, reaction: Rash, severity: MODERATE, recorded: 2014-06-10}
     medications:
       - {id: RX-88231, drug: Metformin, strength: 1000 MG, dose: 1000 mg twice daily, start: 2019-03-12, change_date: 2026-08-14, change_note: Dose raised from 500 mg on 14 Aug 2026, desc: Metformin hydrochloride 1000 MG Oral Tablet, rxnorm: "861004"}
       - {id: RX-60418, drug: Lisinopril, strength: 10 MG, dose: 10 mg daily, start: 2016-05-02, desc: Lisinopril 10 MG Oral Tablet, rxnorm: "314076"}
@@ -77,6 +79,8 @@ patients:
     phone: "+91 98110 41093"
     diagnoses:
       - {id: DX-3501, desc: Coronary artery disease, onset: 2022-02-14, code: "53741008"}
+    allergies:
+      - {id: ALG-1002, substance: Aspirin, reaction: Hives, severity: SEVERE, recorded: 2022-02-14}
     medications:
       - {id: RX-60991, drug: Aspirin, strength: 75 MG, dose: 75 mg daily, start: 2022-02-14, desc: Aspirin 75 MG Oral Tablet, rxnorm: "243670"}
       - {id: RX-61002, drug: Atorvastatin, strength: 40 MG, dose: 40 mg at night, start: 2022-02-14, change_date: 2026-09-30, change_note: Dose raised from 20 mg on 30 Sep 2026, desc: Atorvastatin calcium 40 MG Oral Tablet, rxnorm: "617312"}
