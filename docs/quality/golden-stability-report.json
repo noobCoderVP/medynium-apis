@@ -1,0 +1,235 @@
+{
+ "generated": "2026-10-03T07:10:57+00:00",
+ "passed": 12,
+ "total": 12,
+ "results": [
+  {
+   "id": "G01",
+   "group": "hero",
+   "question": "Is there anything in this patient's medication list worth a second look given the latest results?",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 4,
+    "short_answer": "3 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 37.78
+   }
+  },
+  {
+   "id": "G01",
+   "group": "hero",
+   "question": "Is there anything in this patient's medication list worth a second look given the latest results?",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 4,
+    "short_answer": "3 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 27.58
+   }
+  },
+  {
+   "id": "G01",
+   "group": "hero",
+   "question": "Is there anything in this patient's medication list worth a second look given the latest results?",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 4,
+    "short_answer": "4 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 51.34
+   }
+  },
+  {
+   "id": "G01",
+   "group": "hero",
+   "question": "Is there anything in this patient's medication list worth a second look given the latest results?",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 4,
+    "short_answer": "2 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 13.64
+   }
+  },
+  {
+   "id": "G02",
+   "group": "hero",
+   "question": "Should I be concerned about any of the current medicines in view of this patient's kidney function?",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 5,
+    "short_answer": "2 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 13.52
+   }
+  },
+  {
+   "id": "G02",
+   "group": "hero",
+   "question": "Should I be concerned about any of the current medicines in view of this patient's kidney function?",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 5,
+    "short_answer": "2 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 11.7
+   }
+  },
+  {
+   "id": "G02",
+   "group": "hero",
+   "question": "Should I be concerned about any of the current medicines in view of this patient's kidney function?",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 6,
+    "short_answer": "3 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 12.8
+   }
+  },
+  {
+   "id": "G02",
+   "group": "hero",
+   "question": "Should I be concerned about any of the current medicines in view of this patient's kidney function?",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 4,
+    "short_answer": "3 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 11.75
+   }
+  },
+  {
+   "id": "G03",
+   "group": "hero",
+   "question": "Check the current medicines against the drug labels and the recent lab results.",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 4,
+    "short_answer": "2 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 15.97
+   }
+  },
+  {
+   "id": "G03",
+   "group": "hero",
+   "question": "Check the current medicines against the drug labels and the recent lab results.",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 4,
+    "short_answer": "2 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 19.23
+   }
+  },
+  {
+   "id": "G03",
+   "group": "hero",
+   "question": "Check the current medicines against the drug labels and the recent lab results.",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 5,
+    "short_answer": "2 documented considerations may warrant clinician review.",
+    "error": null,
+    "latency_s": 11.81
+   }
+  },
+  {
+   "id": "G03",
+   "group": "hero",
+   "question": "Check the current medicines against the drug labels and the recent lab results.",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "safety",
+    "model": "claude-sonnet-4-6",
+    "cost_note": "strong model",
+    "kind": "SAFETY",
+    "statements": 3,
+    "short_answer": "1 documented consideration may warrant clinician review.",
+    "error": null,
+    "latency_s": 27.0
+   }
+  }
+ ]
+}

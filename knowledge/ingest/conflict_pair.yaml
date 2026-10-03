@@ -1,0 +1,17 @@
+# The deliberate conflicting source (AI-06). One clearly labelled TEST document for furosemide whose wording
+# differs from the current openFDA label and carries an older version and date. It exists only so the
+# conflict display and the golden conflict question can be tested. It is never presented as real guidance.
+drug_code: FUR
+code: FUR-TEST
+title: "Furosemide tablets: archived label wording (TEST DATA for conflict display)"
+source: openFDA (test data)
+version_label: Archived test version 1
+effective_date: "2019-01-15"
+license_note: Synthetic test text written for this project. Not a real label.
+sections:
+  - key: dosage_and_administration
+    name: Dosage and administration
+    text: "TEST DATA. In this archived wording the usual adult starting dose of furosemide is 20 mg to 80 mg given once daily, and the dose may be raised by 20 mg to 40 mg every 6 to 8 hours until the desired response is reached. This archived text differs from the current label and is included only to exercise conflict display."
+  - key: warnings_and_cautions
+    name: Warnings and precautions
+    text: "TEST DATA. In this archived wording, routine monitoring of serum electrolytes is described as needed only when symptoms occur. The current label advises periodic monitoring. This difference is deliberate test data."

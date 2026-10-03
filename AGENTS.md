@@ -12,9 +12,9 @@ FastAPI backend for Medynium: a governed Patient 360 and clinical agent on Snowf
 - `poetry run poe openapi`: rewrite `docs/api/openapi.json`. Commit it when routes or schemas change; CI fails if it is stale and the UI generates its types from it.
 
 ## Layout
-- `src/medynium_api/api/routes/`: one module per endpoint group, matching SRS section 4.2
-- `src/medynium_api/core/`: config, error contract, session dependency, logging
-- `src/medynium_api/schemas.py`: request and response models (the public contract)
+- `src/medynium_api/features/<name>/`: one self-contained folder per endpoint group (SRS 4.2): `router.py` (thin), `schemas.py` (that feature's public contract), `service.py` (logic), `repository.py` (the only place that runs Snowflake SQL), `README.md` (context card), tests
+- `src/medynium_api/router.py`: mounts every feature router
+- `src/medynium_api/core/`: config, error contract, session dependency, logging. Shared infrastructure only; never imports a feature
 - `snowflake/`: idempotent setup SQL, numbered in run order
 - `data/`, `knowledge/`: loaders and seed data (raw downloads are gitignored)
 - `docs/`: API and database documentation, and `external-dependencies.md`
@@ -31,6 +31,27 @@ FastAPI backend for Medynium: a governed Patient 360 and clinical agent on Snowf
 
 ## Conventions
 - Python 3.12, type hints everywhere, mypy strict, ruff for lint and format (line length 100).
-- Routes are thin; logic goes in service modules (add `services/` when the first real endpoint lands).
+- Routes are thin. Dependency direction is `router -> service -> repository -> Snowflake`, never backwards.
+- Add `service.py` and `repository.py` to a feature when its slice is built; stubs only need `router.py`.
 - Tests in `tests/`; every route needs a denial and an unauthenticated case.
 - Stubs return 501 `not_implemented` until their slice is built, so the OpenAPI document already shows the full contract.
+
+## Modularization (enforced by `tests/test_architecture.py`)
+- A feature never imports another feature. Shared code goes in `core/`, and only when two features need it.
+- Only `repository.py` (and `core/`) imports `snowflake`. Routers never import a repository.
+- Files stay under 300 lines; split by responsibility before they grow.
+- Each feature folder carries a short `README.md` card: purpose, endpoints, requirement IDs, what it may import. Keep it current so one folder can be handed to an AI session without the rest of the repo.
+
+## Definition of done for a slice
+1. `poetry run poe check` passes and the `poetry run poe openapi` output is committed.
+2. Denial (404) and unauthenticated (401) tests exist for every new route.
+3. The hard rules above still hold, and the feature README card is updated.
+4. The UI types still generate (`npm run api:types` in `medynium-ui`).
+
+## Don't
+- Don't add a dependency without asking. Don't hand-edit `docs/api/openapi.json` (a hook blocks it).
+- Don't query Snowflake from a router or service, or with a shared role.
+
+## Project skills (`.claude/skills/`)
+- `new-api-endpoint`: add or implement an endpoint inside a feature folder
+- `slice-done`: run the done checklist and tick the implementation-plan tracker

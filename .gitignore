@@ -30,3 +30,6 @@ knowledge/raw/
 !.vscode/extensions.json
 .DS_Store
 Thumbs.db
+
+# Third-party datasets: license not confirmed, keep out of git
+data/india_medicines/

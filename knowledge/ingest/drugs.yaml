@@ -1,0 +1,34 @@
+# The in-scope generics (K-1). Chosen so the demo works:
+#   S1 drugs (metformin, lisinopril, atorvastatin) have real label text; metformin has renal wording.
+#   S2 drugs (amlodipine, levothyroxine) are indexed but hold nothing relevant to S2's labs.
+#   S4's drug (perampanel) is deliberately NOT here: it is the honest-gap case.
+#   Several common Synthea and Indian-market drugs are included so generated patients are covered too.
+# Fields: code (document id prefix), name (display), openfda (exact generic names to accept, upper-cased on match),
+#         aliases (names found in Synthea medication strings or used as synonyms), nlem (India essential list).
+drugs:
+  - {code: MET, name: Metformin hydrochloride, openfda: [METFORMIN HYDROCHLORIDE], aliases: [metformin, metformin hydrochloride], nlem: true}
+  - {code: LIS, name: Lisinopril, openfda: [LISINOPRIL], aliases: [lisinopril], nlem: true}
+  - {code: ATO, name: Atorvastatin calcium, openfda: [ATORVASTATIN CALCIUM], aliases: [atorvastatin, atorvastatin calcium], nlem: true}
+  - {code: AML, name: Amlodipine besylate, openfda: [AMLODIPINE BESYLATE], aliases: [amlodipine, amlodipine besylate], nlem: true}
+  - {code: LEV, name: Levothyroxine sodium, openfda: [LEVOTHYROXINE SODIUM], aliases: [levothyroxine, levothyroxine sodium], nlem: true}
+  - {code: FUR, name: Furosemide, openfda: [FUROSEMIDE], aliases: [furosemide], nlem: true}
+  - {code: MTP, name: Metoprolol succinate, openfda: [METOPROLOL SUCCINATE], aliases: [metoprolol, metoprolol succinate, metoprolol tartrate], nlem: true}
+  - {code: APX, name: Apixaban, openfda: [APIXABAN], aliases: [apixaban]}
+  - {code: LOS, name: Losartan potassium, openfda: [LOSARTAN POTASSIUM], aliases: [losartan, losartan potassium], nlem: true}
+  - {code: SAL, name: Albuterol sulfate (salbutamol), openfda: [ALBUTEROL SULFATE, ALBUTEROL], aliases: [albuterol, salbutamol, albuterol sulfate], nlem: true}
+  - {code: SIM, name: Simvastatin, openfda: [SIMVASTATIN], aliases: [simvastatin], nlem: true}
+  - {code: CLO, name: Clopidogrel bisulfate, openfda: [CLOPIDOGREL BISULFATE, CLOPIDOGREL], aliases: [clopidogrel, clopidogrel bisulfate], nlem: true}
+  - {code: HCT, name: Hydrochlorothiazide, openfda: [HYDROCHLOROTHIAZIDE], aliases: [hydrochlorothiazide], nlem: true}
+  - {code: GLI, name: Glipizide, openfda: [GLIPIZIDE], aliases: [glipizide]}
+  - {code: GLM, name: Glimepiride, openfda: [GLIMEPIRIDE], aliases: [glimepiride], nlem: true}
+  - {code: WAR, name: Warfarin sodium, openfda: [WARFARIN SODIUM], aliases: [warfarin, warfarin sodium], nlem: true}
+  - {code: OME, name: Omeprazole, openfda: [OMEPRAZOLE], aliases: [omeprazole], nlem: true}
+  - {code: PAN, name: Pantoprazole sodium, openfda: [PANTOPRAZOLE SODIUM], aliases: [pantoprazole, pantoprazole sodium]}
+  - {code: NAP, name: Naproxen, openfda: [NAPROXEN, NAPROXEN SODIUM], aliases: [naproxen, naproxen sodium]}
+  - {code: NIT, name: Nitroglycerin, openfda: [NITROGLYCERIN], aliases: [nitroglycerin], nlem: true}
+  - {code: ALN, name: Alendronate sodium, openfda: [ALENDRONATE SODIUM], aliases: [alendronate, alendronic acid, alendronate sodium]}
+  - {code: TIO, name: Tiotropium bromide, openfda: [TIOTROPIUM BROMIDE], aliases: [tiotropium, tiotropium bromide]}
+  - {code: ROS, name: Rosuvastatin calcium, openfda: [ROSUVASTATIN CALCIUM], aliases: [rosuvastatin, rosuvastatin calcium]}
+  - {code: TEL, name: Telmisartan, openfda: [TELMISARTAN], aliases: [telmisartan]}
+  - {code: SPI, name: Spironolactone, openfda: [SPIRONOLACTONE], aliases: [spironolactone], nlem: true}
+  - {code: CAR, name: Carvedilol, openfda: [CARVEDILOL], aliases: [carvedilol]}

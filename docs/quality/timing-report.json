@@ -1,0 +1,68 @@
+{
+ "generated": "2026-10-03T06:36:28+00:00",
+ "credits_before": 2.22,
+ "credits_after": 2.24,
+ "credits_spent": 0.02,
+ "results": [
+  {
+   "label": "Dashboard data",
+   "runs": 20,
+   "failures": 0,
+   "cold_s": 1.59,
+   "p50_s": 1.16,
+   "p95_s": 1.98,
+   "max_s": 1.98,
+   "target_p50_s": 3
+  },
+  {
+   "label": "Patient overview",
+   "runs": 20,
+   "failures": 0,
+   "cold_s": 1.25,
+   "p50_s": 0.92,
+   "p95_s": 1.61,
+   "max_s": 1.61,
+   "target_p50_s": 3
+  },
+  {
+   "label": "Router decision only",
+   "runs": 10,
+   "failures": 0,
+   "cold_s": 1.94,
+   "p50_s": 0.86,
+   "p95_s": 1.94,
+   "max_s": 1.94,
+   "target_p50_s": 2
+  },
+  {
+   "label": "lookup route (current medicines)",
+   "runs": 20,
+   "failures": 0,
+   "cold_s": 3.36,
+   "p50_s": 3.53,
+   "p95_s": 15.06,
+   "max_s": 15.06,
+   "target_p50_s": 1
+  },
+  {
+   "label": "changed route (what changed)",
+   "runs": 20,
+   "failures": 0,
+   "cold_s": 2.64,
+   "p50_s": 3.05,
+   "p95_s": 5.91,
+   "max_s": 5.91,
+   "target_p50_s": 1
+  },
+  {
+   "label": "Safety review through the assistant (hero)",
+   "runs": 8,
+   "failures": 0,
+   "cold_s": 27.14,
+   "p50_s": 24.14,
+   "p95_s": 39.19,
+   "max_s": 39.19,
+   "target_p50_s": 20
+  }
+ ]
+}

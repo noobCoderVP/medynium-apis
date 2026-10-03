@@ -14,7 +14,7 @@ cp .env.example .env          # Windows: copy .env.example .env
 poetry run poe dev            # http://localhost:8000/docs
 ```
 
-`/health` works with no Snowflake credentials. Every other route needs a session and currently answers `401`, or `501 not_implemented` once signed in, until its slice is built.
+`/health` works with no Snowflake credentials. Everything else needs a session and a Snowflake account set up as in [docs/database/data-loading.md](docs/database/data-loading.md#how-to-run-it-as-built). Stages 0 to 4 are built; see the tracker in the workspace `build-plan/09-milestones-and-tracker.md`.
 
 ## Daily commands
 

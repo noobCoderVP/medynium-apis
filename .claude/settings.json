@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(poetry run poe *)",
+      "Bash(poetry run pytest*)",
+      "Bash(poetry run ruff *)",
+      "Bash(poetry run mypy*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/guard.mjs" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node .claude/hooks/format.mjs" }]
+      }
+    ]
+  }
+}

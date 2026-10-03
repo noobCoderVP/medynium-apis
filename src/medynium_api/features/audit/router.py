@@ -1,0 +1,33 @@
+import datetime as dt
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
+
+from medynium_api.core.pagination import Paging
+from medynium_api.core.session import CurrentSession
+from medynium_api.features.audit.schemas import AuditPage
+from medynium_api.features.audit.service import AuditService
+
+router = APIRouter(tags=["audit"])
+
+
+def get_service() -> AuditService:
+    return AuditService()
+
+
+Service = Annotated[AuditService, Depends(get_service)]
+
+
+@router.get("/audit")
+def audit(
+    session: CurrentSession,
+    service: Service,
+    page: Paging,
+    patient_id: str | None = None,
+    from_: Annotated[dt.date | None, Query(alias="from")] = None,
+    to: dt.date | None = None,
+    action: str | None = None,
+    outcome: str | None = None,
+) -> AuditPage:
+    """The caller's own entries, newest first. Denied attempts are included."""
+    return service.entries(session, patient_id, from_, to, action, outcome, page)

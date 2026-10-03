@@ -1,0 +1,45 @@
+# Labelled retrieval queries (K-8). Each query names the drug a correct answer must come from; section queries may
+# also name the sections that count. kind: section | brand | negative.
+#   section  correct = a top-k chunk for `drug` (and one of `sections` when listed)
+#   brand    correct = the brand resolves to `drug` and a chunk of that drug is returned
+#   negative correct = nothing returned for a drug that is NOT in the corpus (an honest gap, not a guess)
+queries:
+  # Section lookups ------------------------------------------------------------------------------------
+  - {kind: section, q: metformin renal impairment eGFR, drug: Metformin hydrochloride, sections: [Contraindications, Warnings and precautions, Dosage and administration]}
+  - {kind: section, q: metformin lactic acidosis risk factors, drug: Metformin hydrochloride}
+  - {kind: section, q: lisinopril kidney function and serum potassium, drug: Lisinopril}
+  - {kind: section, q: lisinopril angioedema, drug: Lisinopril}
+  - {kind: section, q: atorvastatin myopathy and rhabdomyolysis, drug: Atorvastatin calcium}
+  - {kind: section, q: amlodipine hypotension and severe aortic stenosis, drug: Amlodipine besylate}
+  - {kind: section, q: levothyroxine administration on an empty stomach, drug: Levothyroxine sodium}
+  - {kind: section, q: levothyroxine not for obesity or weight loss, drug: Levothyroxine sodium}
+  - {kind: section, q: furosemide fluid and electrolyte depletion, drug: Furosemide}
+  - {kind: section, q: apixaban bleeding risk, drug: Apixaban}
+  - {kind: section, q: apixaban premature discontinuation thrombotic events, drug: Apixaban}
+  - {kind: section, q: warfarin INR monitoring and bleeding, drug: Warfarin sodium}
+  - {kind: section, q: metoprolol abrupt cessation ischemic heart disease, drug: Metoprolol succinate}
+  - {kind: section, q: clopidogrel CYP2C19 poor metabolizers, drug: Clopidogrel bisulfate}
+  - {kind: section, q: losartan fetal toxicity pregnancy, drug: Losartan potassium}
+  - {kind: section, q: spironolactone hyperkalemia, drug: Spironolactone}
+  - {kind: section, q: simvastatin contraindicated medicines, drug: Simvastatin}
+  - {kind: section, q: tiotropium narrow-angle glaucoma urinary retention, drug: Tiotropium bromide}
+  - {kind: section, q: glipizide hypoglycemia, drug: Glipizide}
+  - {kind: section, q: pantoprazole gastric malignancy, drug: Pantoprazole sodium}
+  - {kind: section, q: albuterol paradoxical bronchospasm, drug: Albuterol sulfate (salbutamol)}
+  - {kind: section, q: carvedilol dosage in heart failure, drug: Carvedilol}
+  # Indian brands and aliases --------------------------------------------------------------------------
+  - {kind: brand, q: Glycomet, drug: Metformin hydrochloride}
+  - {kind: brand, q: Zestril, drug: Lisinopril}
+  - {kind: brand, q: Eliquis warnings, drug: Apixaban}
+  - {kind: brand, q: Lasix, drug: Furosemide}
+  - {kind: brand, q: Asthalin, drug: Albuterol sulfate (salbutamol)}
+  - {kind: brand, q: salbutamol dosage, drug: Albuterol sulfate (salbutamol)}
+  - {kind: brand, q: Amlong, drug: Amlodipine besylate}
+  - {kind: brand, q: Lotan, drug: Losartan potassium}
+  # Negatives: drugs that are not in the corpus ---------------------------------------------------------
+  - {kind: negative, q: perampanel seizures}
+  - {kind: negative, q: ivermectin dosing for scabies}
+  - {kind: negative, q: amoxicillin clavulanate respiratory infection}
+  - {kind: negative, q: insulin glargine hypoglycemia}
+  - {kind: negative, q: paracetamol overdose treatment}
+  - {kind: negative, q: levetiracetam dose adjustment}
