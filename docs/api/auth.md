@@ -167,3 +167,14 @@ Replaces the user's active set.
 | Knowledge search | yes | yes | yes |
 | Golden run, skills, health details | yes (golden, skills) | yes | no |
 | User, invite, entitlement admin | no | yes | no |
+
+## Mobile clients (bearer mode)
+
+The mobile app sends `X-Medynium-Client: mobile` instead of `web`. For those requests:
+
+- `POST /auth/login` and `POST /auth/login/verify` set no cookies and return `tokens: { access, refresh }` in the body.
+- Every request sends `Authorization: Bearer <access>`; it is the same token and the same checks as the cookie.
+- `POST /auth/mobile/refresh` with `{ "refresh": "<token>" }` returns a new `{ access, refresh }`. Rotation and reuse detection are identical to `/auth/refresh`; a reused token revokes the session.
+- `POST /auth/logout` works with the bearer token.
+
+Web requests are unchanged and never receive `tokens`.

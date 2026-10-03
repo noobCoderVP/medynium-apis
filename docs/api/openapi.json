@@ -342,6 +342,68 @@
         }
       }
     },
+    "/auth/mobile/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh Mobile",
+        "description": "Mobile only: rotate the bearer tokens. Same rotation and reuse detection as the cookie refresh.",
+        "operationId": "refresh_mobile_auth_mobile_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/logout": {
       "post": {
         "tags": [
@@ -2943,6 +3005,51 @@
                 }
               ],
               "title": "Outcome"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "when",
+                "action",
+                "outcome"
+              ],
+              "type": "string",
+              "default": "when",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string",
+              "default": "desc",
+              "title": "Order"
             }
           },
           {
@@ -5705,6 +5812,16 @@
             "type": "string",
             "format": "date-time",
             "title": "Session Expires At"
+          },
+          "tokens": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TokenPair"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -6719,6 +6836,22 @@
         ],
         "title": "Reference"
       },
+      "RefreshRequest": {
+        "properties": {
+          "refresh": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 10,
+            "title": "Refresh"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "refresh"
+        ],
+        "title": "RefreshRequest"
+      },
       "RouteInfo": {
         "properties": {
           "route": {
@@ -7200,6 +7333,25 @@
           "encounter_id"
         ],
         "title": "TimelineEvent"
+      },
+      "TokenPair": {
+        "properties": {
+          "access": {
+            "type": "string",
+            "title": "Access"
+          },
+          "refresh": {
+            "type": "string",
+            "title": "Refresh"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access",
+          "refresh"
+        ],
+        "title": "TokenPair",
+        "description": "Bearer tokens for the mobile client. The web client never receives these; it gets cookies."
       },
       "TrendPoint": {
         "properties": {

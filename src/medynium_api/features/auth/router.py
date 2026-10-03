@@ -18,6 +18,8 @@ from medynium_api.features.auth.schemas import (
     MeResponse,
     OtpChallenge,
     OtpVerifyRequest,
+    RefreshRequest,
+    TokenPair,
 )
 from medynium_api.features.auth.service import AuthService
 
@@ -37,6 +39,10 @@ def get_invites(settings: SettingsDep) -> InviteService:
 
 
 Invites = Annotated[InviteService, Depends(get_invites)]
+
+
+def is_mobile(request: Request) -> bool:
+    return request.headers.get("x-medynium-client") == "mobile"
 
 
 def client(request: Request) -> tuple[str | None, str | None]:
@@ -59,6 +65,10 @@ def login(
     ip, agent = client(request)
     result, tokens = service.login(body.email, body.password, ip, agent)
     if tokens is not None:
+        if is_mobile(request) and isinstance(result, LoginResponse):
+            return result.model_copy(
+                update={"tokens": TokenPair(access=tokens.access, refresh=tokens.refresh)}
+            )
         set_auth_cookies(response, settings, tokens.access, tokens.refresh)
     return result
 
@@ -74,6 +84,10 @@ def verify_login(
     """Finish a sign-in with the six-digit code that was emailed. Sets the auth cookies."""
     ip, agent = client(request)
     result, tokens = service.verify_otp(body.challenge, body.code, ip, agent)
+    if is_mobile(request):
+        return result.model_copy(
+            update={"tokens": TokenPair(access=tokens.access, refresh=tokens.refresh)}
+        )
     set_auth_cookies(response, settings, tokens.access, tokens.refresh)
     return result
 
@@ -89,6 +103,13 @@ def refresh(request: Request, response: Response, service: Service, settings: Se
     """Rotate both cookies using the refresh cookie. A reused refresh token revokes the session."""
     tokens = service.refresh(request.cookies.get(REFRESH_COOKIE))
     set_auth_cookies(response, settings, tokens.access, tokens.refresh)
+
+
+@router.post("/auth/mobile/refresh", responses={401: {"model": ErrorBody}})
+def refresh_mobile(body: RefreshRequest, service: Service) -> TokenPair:
+    """Mobile only: rotate the bearer tokens. Same rotation and reuse detection as the cookie refresh."""
+    tokens = service.refresh(body.refresh)
+    return TokenPair(access=tokens.access, refresh=tokens.refresh)
 
 
 @router.post("/auth/logout", status_code=204)

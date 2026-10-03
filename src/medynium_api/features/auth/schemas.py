@@ -23,9 +23,21 @@ class UserOut(BaseModel):
     is_admin: bool
 
 
+class TokenPair(BaseModel):
+    """Bearer tokens for the mobile client. The web client never receives these; it gets cookies."""
+
+    access: str
+    refresh: str
+
+
 class LoginResponse(BaseModel):
     user: UserOut
     session_expires_at: datetime
+    tokens: TokenPair | None = None  # only when the request carried `X-Medynium-Client: mobile`
+
+
+class RefreshRequest(Strict):
+    refresh: str = Field(min_length=10, max_length=500)
 
 
 class OtpChallenge(BaseModel):

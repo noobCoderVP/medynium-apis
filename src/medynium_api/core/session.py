@@ -1,4 +1,4 @@
-"""The signed-in caller, from the access-token cookie. Every route except those marked public needs one.
+"""The signed-in caller, from the access-token cookie (or a bearer header for the mobile app). Every route except those marked public needs one.
 
 The access token is verified without a database call (ADR-004). The Snowflake role is derived from the user id,
 never taken from the request.
@@ -34,6 +34,9 @@ class Session:
 def optional_session(request: Request) -> Session | None:
     """The caller if their access cookie is valid, otherwise None (for routes that work either way)."""
     token = request.cookies.get(ACCESS_COOKIE)
+    if not token:  # mobile clients send the same access token as a bearer header
+        scheme, _, value = request.headers.get("authorization", "").partition(" ")
+        token = value if scheme.lower() == "bearer" and value else None
     claims = decode_access_token(get_settings(), token) if token else None
     if claims is None:
         return None

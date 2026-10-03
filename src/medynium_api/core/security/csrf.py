@@ -1,4 +1,4 @@
-"""Require `X-Medynium-Client: web` on every state-changing request (second defence after SameSite=Lax)."""
+"""Require `X-Medynium-Client: web` (or `mobile`) on every state-changing request (second defence after SameSite=Lax)."""
 
 import json
 
@@ -18,7 +18,7 @@ class CsrfMiddleware:
             await self.app(scope, receive, send)
             return
         headers = dict(scope["headers"])
-        if headers.get(HEADER) != b"web":
+        if headers.get(HEADER) not in (b"web", b"mobile"):
             await send(
                 {
                     "type": "http.response.start",
