@@ -13,6 +13,14 @@ EventType = Literal[
 ]
 
 
+class DoctorRef(BaseModel):
+    """The doctor behind a record, and how we know: who entered it, who wrote the note, or the visit's clinician."""
+
+    name: str
+    speciality: str | None = None
+    basis: Literal["entered_by", "author", "provider", "treating"]
+
+
 class PatientListItem(BaseModel):
     patient_id: str
     name: str
@@ -32,6 +40,7 @@ class Diagnosis(BaseModel):
     onset_year: int | None
     code: str | None
     source: str = "CLINICAL.DIAGNOSIS"
+    doctor: DoctorRef | None = None
 
 
 class Medication(BaseModel):
@@ -47,6 +56,7 @@ class Medication(BaseModel):
     in_knowledge_base: bool
     also_sold_as: list[str]
     source: str = "CLINICAL.MEDICATION"
+    doctor: DoctorRef | None = None
 
 
 class Reference(BaseModel):
@@ -70,6 +80,7 @@ class LabLatest(BaseModel):
     ref: Reference
     flag: LabFlag | None
     source: str = "CLINICAL.LAB_RESULT"
+    doctor: DoctorRef | None = None
 
 
 class TrendPoint(BaseModel):
@@ -99,6 +110,7 @@ class TimelineEvent(BaseModel):
     summary: str | None
     record: RecordRef
     encounter_id: str | None
+    doctor: DoctorRef | None = None
 
 
 class Timeline(Page[TimelineEvent]):
@@ -135,6 +147,9 @@ class Overview(BaseModel):
     latest_labs: list[LabLatest]
     recent_events: list[TimelineEvent]
     utilization: Utilization
+    treating_doctors: list[str] = Field(
+        default_factory=list, description="Doctors who currently have this patient."
+    )
     agent_scope_label: str = "Agent scope: this patient"
 
 
@@ -146,6 +161,7 @@ class Claim(BaseModel):
     status: str
     billed: Money
     approved: Money
+    doctor: DoctorRef | None = None
 
 
 class Claims(BaseModel):
@@ -162,6 +178,7 @@ class NoteSummary(BaseModel):
     type: str | None
     date: dt.date
     encounter_id: str | None
+    doctor: DoctorRef | None = None
 
 
 NoteList = Page[NoteSummary]

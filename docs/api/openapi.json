@@ -2542,6 +2542,460 @@
         }
       }
     },
+    "/patients/{patient_id}/brief": {
+      "get": {
+        "tags": [
+          "brief"
+        ],
+        "summary": "Brief",
+        "description": "What to look at first: attention items, changes since the previous visit, what is missing and the latest results.\nRules over the caller's own record; no model call. 404 if the patient is missing or denied.",
+        "operationId": "brief_patients__patient_id__brief_get",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/brief/summary": {
+      "get": {
+        "tags": [
+          "brief"
+        ],
+        "summary": "Brief Summary",
+        "description": "A two-to-three sentence written summary of the brief. A model may rephrase the rule signals only; anything it adds\nis discarded and the rule-made headline is used instead.",
+        "operationId": "brief_summary_patients__patient_id__brief_summary_get",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/attention": {
+      "get": {
+        "tags": [
+          "brief"
+        ],
+        "summary": "Attention",
+        "description": "Items that deserve a look, by fixed rules: abnormal or moving results, new medicines or diagnoses, an emergency\nvisit, findings and reports waiting. Each names its source record.",
+        "operationId": "attention_patients__patient_id__attention_get",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttentionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/changes": {
+      "get": {
+        "tags": [
+          "brief"
+        ],
+        "summary": "Changes",
+        "description": "What changed since a starting point, grouped as medication, lab, diagnosis, visit, note and document.",
+        "operationId": "changes_patients__patient_id__changes_get",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 16,
+              "description": "previous_visit, 90d, 1y or YYYY-MM-DD",
+              "default": "previous_visit",
+              "title": "From"
+            },
+            "description": "previous_visit, 90d, 1y or YYYY-MM-DD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeSet"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/gaps": {
+      "get": {
+        "tags": [
+          "brief"
+        ],
+        "summary": "Gaps",
+        "description": "What is missing, by fixed rules: usual follow-up results not seen lately, medicines with no indexed label,\nno allergy information. Never a statement that the patient is fine.",
+        "operationId": "gaps_patients__patient_id__gaps_get",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GapResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/summary": {
+      "get": {
+        "tags": [
+          "brief"
+        ],
+        "summary": "Patient Summary",
+        "description": "The stored written summary (markdown) with when it was written, or `exists=false` before the first one.",
+        "operationId": "patient_summary_patients__patient_id__summary_get",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/summary/refresh": {
+      "post": {
+        "tags": [
+          "brief"
+        ],
+        "summary": "Refresh Patient Summary",
+        "description": "Write the summary again from the record as it is now (about ten seconds) and replace the stored one. Every number\nin it is checked against the record; if the model is unavailable a rule-made summary is stored and labelled so.",
+        "operationId": "refresh_patient_summary_patients__patient_id__summary_refresh_post",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
     "/pending": {
       "get": {
         "tags": [
@@ -6305,6 +6759,192 @@
         }
       }
     },
+    "/agent/proposals/{proposal_id}/approve": {
+      "post": {
+        "tags": [
+          "copilot"
+        ],
+        "summary": "Approve Proposal",
+        "description": "Write a change the assistant prepared, after the clinician approved its preview. Same service, same checks and\naudit as the manual screen. Doctors only; someone else's or an expired proposal is 404.",
+        "operationId": "approve_proposal_agent_proposals__proposal_id__approve_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/proposals/{proposal_id}/discard": {
+      "post": {
+        "tags": [
+          "copilot"
+        ],
+        "summary": "Discard Proposal",
+        "description": "Drop a prepared change. Nothing was written.",
+        "operationId": "discard_proposal_agent_proposals__proposal_id__discard_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalDiscarded"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/evidence/{answer_id}": {
       "get": {
         "tags": [
@@ -7381,6 +8021,72 @@
         }
       }
     },
+    "/audit/summary": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Audit Summary",
+        "description": "What the assistant did for the caller over the last days: volume, routes, models, tools chosen, how long people\nwaited (median and 95th percentile) and the slowest steps. The caller's own entries only.",
+        "operationId": "audit_summary_audit_summary_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "default": 7,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiMetrics"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/invites": {
       "post": {
         "tags": [
@@ -8350,6 +9056,112 @@
         ],
         "title": "ActionResponse"
       },
+      "AiMetrics": {
+        "properties": {
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "entries": {
+            "type": "integer",
+            "title": "Entries"
+          },
+          "asks": {
+            "type": "integer",
+            "title": "Asks"
+          },
+          "by_route": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Route"
+          },
+          "outcomes": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Outcomes"
+          },
+          "models": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Models"
+          },
+          "planner_models": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Planner Models"
+          },
+          "tools": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Tools"
+          },
+          "median_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Seconds"
+          },
+          "p95_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P95 Seconds"
+          },
+          "slowest_steps": {
+            "items": {
+              "$ref": "#/components/schemas/SlowStep"
+            },
+            "type": "array",
+            "title": "Slowest Steps"
+          },
+          "proposals_approved": {
+            "type": "integer",
+            "title": "Proposals Approved"
+          },
+          "proposals_discarded": {
+            "type": "integer",
+            "title": "Proposals Discarded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "days",
+          "entries",
+          "asks",
+          "by_route",
+          "outcomes",
+          "models",
+          "planner_models",
+          "tools",
+          "median_seconds",
+          "p95_seconds",
+          "slowest_steps",
+          "proposals_approved",
+          "proposals_discarded"
+        ],
+        "title": "AiMetrics",
+        "description": "The assistant's own activity for the caller over a window (basic observability): volume, routes, models, tools,\nhow long people waited, and which steps were slowest."
+      },
       "Allergy": {
         "properties": {
           "allergy_id": {
@@ -8538,7 +9350,9 @@
               "SUMMARY",
               "ANALYST",
               "KNOWLEDGE",
-              "PANEL"
+              "PANEL",
+              "AGENT",
+              "DRUG"
             ],
             "title": "Kind"
           },
@@ -8746,6 +9560,19 @@
             ],
             "title": "Patient Id"
           },
+          "last_answer_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Answer Id",
+            "description": "The previous answer in this conversation. Its drug and lab names (a closed vocabulary, never free text) help the planner resolve words like 'that medicine'."
+          },
           "history": {
             "items": {
               "type": "string"
@@ -8782,6 +9609,14 @@
             },
             "type": "array",
             "title": "Actions"
+          },
+          "proposals": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Proposals"
           },
           "answer": {
             "anyOf": [
@@ -8838,6 +9673,96 @@
         ],
         "title": "AskResult",
         "description": "JSON mode (Accept: application/json): the final outcome of a request that would otherwise stream."
+      },
+      "AttentionItem": {
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": [
+              "high",
+              "moderate",
+              "info"
+            ],
+            "title": "Severity"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceRef"
+          }
+        },
+        "type": "object",
+        "required": [
+          "severity",
+          "kind",
+          "title",
+          "source"
+        ],
+        "title": "AttentionItem"
+      },
+      "AttentionResponse": {
+        "properties": {
+          "patient_id": {
+            "type": "string",
+            "title": "Patient Id"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AttentionItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "patient_id",
+          "as_of",
+          "items",
+          "counts"
+        ],
+        "title": "AttentionResponse"
       },
       "AuditItem": {
         "properties": {
@@ -8989,6 +9914,70 @@
         ],
         "title": "AuditItem"
       },
+      "BriefResponse": {
+        "properties": {
+          "patient_id": {
+            "type": "string",
+            "title": "Patient Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "sex": {
+            "type": "string",
+            "title": "Sex"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "attention": {
+            "$ref": "#/components/schemas/AttentionResponse"
+          },
+          "changes": {
+            "$ref": "#/components/schemas/ChangeSet"
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/GapItem"
+            },
+            "type": "array",
+            "title": "Gaps"
+          },
+          "latest_results": {
+            "items": {
+              "$ref": "#/components/schemas/LatestResult"
+            },
+            "type": "array",
+            "title": "Latest Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "patient_id",
+          "name",
+          "age",
+          "sex",
+          "as_of",
+          "headline",
+          "attention",
+          "changes",
+          "gaps",
+          "latest_results"
+        ],
+        "title": "BriefResponse",
+        "description": "The first screen of a patient: what to look at, what changed, what is missing. Rules only, no model call."
+      },
       "BriefingItem": {
         "properties": {
           "patient_id": {
@@ -9055,6 +10044,75 @@
         ],
         "title": "BriefingResponse"
       },
+      "ChangeItem": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "MEDICATION",
+              "LAB",
+              "DIAGNOSIS",
+              "VISIT",
+              "NOTE",
+              "DOCUMENT"
+            ],
+            "title": "Category"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down",
+                  "same"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceRef"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "title",
+          "source"
+        ],
+        "title": "ChangeItem"
+      },
       "ChangePasswordRequest": {
         "properties": {
           "current_password": {
@@ -9077,6 +10135,41 @@
           "new_password"
         ],
         "title": "ChangePasswordRequest"
+      },
+      "ChangeSet": {
+        "properties": {
+          "since": {
+            "type": "string",
+            "format": "date",
+            "title": "Since"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ChangeItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "since",
+          "label",
+          "counts",
+          "items"
+        ],
+        "title": "ChangeSet"
       },
       "Citation": {
         "properties": {
@@ -9242,6 +10335,16 @@
           },
           "approved": {
             "$ref": "#/components/schemas/Money"
+          },
+          "doctor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DoctorRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -9603,6 +10706,16 @@
             "type": "string",
             "title": "Source",
             "default": "CLINICAL.DIAGNOSIS"
+          },
+          "doctor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DoctorRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -9748,6 +10861,42 @@
           "description"
         ],
         "title": "DiagnosisUpdate"
+      },
+      "DoctorRef": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "speciality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speciality"
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "entered_by",
+              "author",
+              "provider",
+              "treating"
+            ],
+            "title": "Basis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "basis"
+        ],
+        "title": "DoctorRef",
+        "description": "The doctor behind a record, and how we know: who entered it, who wrote the note, or the visit's clinician."
       },
       "DrugDirectory": {
         "properties": {
@@ -10466,6 +11615,66 @@
           "email"
         ],
         "title": "ForgotPasswordRequest"
+      },
+      "GapItem": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "title"
+        ],
+        "title": "GapItem"
+      },
+      "GapResponse": {
+        "properties": {
+          "patient_id": {
+            "type": "string",
+            "title": "Patient Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GapItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "patient_id",
+          "items"
+        ],
+        "title": "GapResponse"
       },
       "GoldenCase": {
         "properties": {
@@ -11284,6 +12493,16 @@
             "type": "string",
             "title": "Source",
             "default": "CLINICAL.LAB_RESULT"
+          },
+          "doctor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DoctorRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -11410,6 +12629,77 @@
           "observed_at"
         ],
         "title": "LabUpdate"
+      },
+      "LatestResult": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "flag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceRef"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "unit",
+          "flag",
+          "date",
+          "previous",
+          "source"
+        ],
+        "title": "LatestResult"
       },
       "Limits": {
         "properties": {
@@ -11708,6 +12998,16 @@
             "type": "string",
             "title": "Source",
             "default": "CLINICAL.MEDICATION"
+          },
+          "doctor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DoctorRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -12001,6 +13301,16 @@
             ],
             "title": "Encounter Id"
           },
+          "doctor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DoctorRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "author": {
             "anyOf": [
               {
@@ -12122,6 +13432,16 @@
               }
             ],
             "title": "Encounter Id"
+          },
+          "doctor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DoctorRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -12323,6 +13643,14 @@
           },
           "utilization": {
             "$ref": "#/components/schemas/Utilization"
+          },
+          "treating_doctors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Treating Doctors",
+            "description": "Doctors who currently have this patient."
           },
           "agent_scope_label": {
             "type": "string",
@@ -12761,6 +14089,90 @@
         ],
         "title": "PatientListItem"
       },
+      "PatientSummary": {
+        "properties": {
+          "patient_id": {
+            "type": "string",
+            "title": "Patient Id"
+          },
+          "exists": {
+            "type": "boolean",
+            "title": "Exists"
+          },
+          "markdown": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Markdown"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "model",
+                  "rules"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "generated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated By"
+          },
+          "changed_since": {
+            "type": "boolean",
+            "title": "Changed Since",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "patient_id",
+          "exists"
+        ],
+        "title": "PatientSummary",
+        "description": "The stored written summary (markdown) of a patient, or `exists=false` before the first one is written."
+      },
       "PatientUpdate": {
         "properties": {
           "version": {
@@ -13145,6 +14557,66 @@
           "date"
         ],
         "title": "PreviousValue"
+      },
+      "ProposalDiscarded": {
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "discarded",
+            "title": "Status",
+            "default": "discarded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "proposal_id"
+        ],
+        "title": "ProposalDiscarded"
+      },
+      "ProposalResult": {
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id"
+          },
+          "patient_id": {
+            "type": "string",
+            "title": "Patient Id"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Id"
+          },
+          "tab": {
+            "type": "string",
+            "title": "Tab",
+            "default": "overview"
+          },
+          "status": {
+            "type": "string",
+            "const": "approved",
+            "title": "Status",
+            "default": "approved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "proposal_id",
+          "patient_id"
+        ],
+        "title": "ProposalResult",
+        "description": "An approved proposal: where the new record is."
       },
       "RecentChanges": {
         "properties": {
@@ -14290,6 +15762,29 @@
         ],
         "title": "SimilarResponse"
       },
+      "SlowStep": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "runs": {
+            "type": "integer",
+            "title": "Runs"
+          },
+          "average_seconds": {
+            "type": "number",
+            "title": "Average Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "runs",
+          "average_seconds"
+        ],
+        "title": "SlowStep"
+      },
       "SnowflakeHealth": {
         "properties": {
           "reachable": {
@@ -14421,6 +15916,52 @@
         ],
         "title": "SourceEvidence"
       },
+      "SourceRef": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "lab",
+              "medication",
+              "diagnosis",
+              "encounter",
+              "note",
+              "report",
+              "finding"
+            ],
+            "title": "Type"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "tab": {
+            "type": "string",
+            "title": "Tab"
+          },
+          "query": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Query",
+            "description": "Extra URL parameters, e.g. lab=eGFR."
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "tab"
+        ],
+        "title": "SourceRef"
+      },
       "SqlEvidence": {
         "properties": {
           "sql_id": {
@@ -14454,6 +15995,44 @@
           "ran_at"
         ],
         "title": "SqlEvidence"
+      },
+      "SummaryResponse": {
+        "properties": {
+          "patient_id": {
+            "type": "string",
+            "title": "Patient Id"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "model",
+              "rules"
+            ],
+            "title": "Source"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "patient_id",
+          "summary",
+          "source"
+        ],
+        "title": "SummaryResponse"
       },
       "SyncStatus": {
         "properties": {
@@ -14552,6 +16131,16 @@
               }
             ],
             "title": "Encounter Id"
+          },
+          "doctor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DoctorRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

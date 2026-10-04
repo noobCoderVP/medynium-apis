@@ -1,4 +1,4 @@
-"""The evidence pack (build-plan 04, section 5): exactly what the model is shown, in a fixed order, each block
+"""The evidence pack (docs/architecture/ai-layer.md): exactly what the model is shown, in a fixed order, each block
 delimited. Patient facts carry ids P1.., source chunks S1..; source and note text is wrapped as untrusted data.
 What was checked and what is missing is computed here, never decided by the model."""
 

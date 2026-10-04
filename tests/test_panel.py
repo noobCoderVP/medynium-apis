@@ -91,8 +91,8 @@ def test_the_callers_own_panel_is_no_longer_refused(question: str) -> None:
     assert guard(question) is None
 
 
-def test_prescribing_and_record_changes_are_refused_even_about_the_panel() -> None:
-    assert guard("what should I prescribe for my patients with kidney disease") == "prescribing"
+def test_diagnosis_and_record_changes_are_refused_even_about_the_panel() -> None:
+    assert guard("diagnose my patients with kidney disease") == "diagnosis"
     assert guard("add a note to all my patients") == "record_change"
 
 

@@ -22,7 +22,7 @@ FastAPI backend for Medynium: a governed Patient 360 and clinical agent on Snowf
 ## Rules that must not be broken
 1. **Entitlement first.** A denied patient returns exactly the response of a missing one: 404 `not_found`, same body, similar latency. Never put a patient ID in an error message (SEC-05).
 2. **User role, not a service role.** Every Snowflake query for a request runs under that user's own connection and role. No shared account that sees all patients serves requests (SEC-03). No runtime path uses `MED_ADMIN` (SEC-06).
-3. **Closed action set.** The agent can only do `open_patient`, `show_timeline`, `run_safety_review`, `pin_evidence`, checked server-side. Anything else is `action_not_allowed` and is audited (SEC-12).
+3. **Closed action set.** The agent can only do `open_patient`, `show_timeline`, `run_safety_review`, `pin_evidence`, checked server-side. Anything else is `action_not_allowed` and is audited (SEC-12). Writes are never an action: a change to the record is a proposal the clinician approves (see `features/copilot/README.md`).
 4. **The router is not a security boundary.** Entitlement, allowlist and evidence validation run on every route whatever the router said. The router never sees patient records or document text.
 5. **Evidence or nothing.** Every answer statement maps to patient evidence or a source chunk; unbacked statements are dropped by the validator. "No documented consideration found in the indexed sources" is never written as "no risk".
 6. **No secrets in the repo.** Only `.env.example`. Never log credentials, keys or patient names.

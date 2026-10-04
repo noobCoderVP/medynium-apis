@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from medynium_api.features.admin.router import router as admin
 from medynium_api.features.audit.router import router as audit
 from medynium_api.features.auth.router import router as auth
+from medynium_api.features.brief.router import router as brief
 from medynium_api.features.copilot.router import router as copilot
 from medynium_api.features.dashboard.router import router as dashboard
 from medynium_api.features.drug_coverage.router import router as drug_coverage
@@ -25,6 +26,7 @@ for feature_router in (
     auth,
     dashboard,
     patients,
+    brief,
     pending,
     pins,
     records,

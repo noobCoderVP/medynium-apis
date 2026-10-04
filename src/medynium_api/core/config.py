@@ -60,6 +60,10 @@ class Settings(BaseSettings):
 
     # Cortex
     router_model: str = "llama3.1-8b"
+    planner_model: str = (
+        "llama3.3-70b"  # picks tools; the router model is the fallback when it fails
+    )
+    planner_timeout_seconds: float = 12.0
     strong_model: str = "claude-sonnet-4-6"
     safety_path: Literal["pack", "agent"] = "pack"
     cortex_search_service: str = "MEDYNIUM.KNOWLEDGE.LABEL_SEARCH"

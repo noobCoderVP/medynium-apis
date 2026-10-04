@@ -1,11 +1,12 @@
 """The validator (A-3): the model proposes statements, this module disposes of them.
 
-Rules (build-plan 04, section 5):
+Rules (docs/architecture/ai-layer.md):
   1. every statement needs at least one evidence id that exists in the pack, else it is dropped;
   2. tags must match the evidence: patient_fact cites patient evidence only, retrieved_source cites source chunks only,
      ai_synthesis cites both and is worded "may warrant clinician review";
   3. instruction-like text (an injected command copied into a statement) is dropped;
-  4. prescribing, dosing or diagnosis advice is dropped;
+  4. prescribing, dosing or diagnosis advice is dropped (drug-information answers may state what a label documents,
+     including label dosing, but never instruct or decide for the clinician);
   5. the short answer is built here from what survived, never taken from the model, and "no documented consideration
      found in the indexed sources" is never written as "no risk";
   6. SQL that does not name the one patient in scope rejects the whole answer;
@@ -33,6 +34,14 @@ ADVICE = re.compile(
     r"|\b(i |we )?recommend(ed)? (to )?(start|stop|increas|reduc|switch|prescrib|discontinu)"
     r"|\bshould be (started|stopped|increased|reduced|discontinued|switched|prescribed)\b"
     r"|\b(increase|reduce|lower|raise) the (dose|dosage)\b|\bdiagnos(is of|ed with|e)\b|\bprescribe\b",
+    re.IGNORECASE,
+)
+# Drug-information answers may name medicines and quote label dosing; what stays out is an instruction to the
+# clinician or a statement that decides for them (the clinician makes the call).
+DRUG_ADVICE = re.compile(
+    r"\byou should\b|\b(i|we) (recommend|advise|suggest)\b|\bis the best (choice|option|drug|medicine)\b"
+    r"|\bstart (the patient|him|her|them) on\b|\bprescribe (him|her|them|the patient)\b"
+    r"|\bdiagnos(ed|e|is) (the|this) patient\b",
     re.IGNORECASE,
 )
 FALSE_REASSURANCE = re.compile(
@@ -73,6 +82,7 @@ def validate_statements(
     patient_id: str,
     kinds: dict[str, str] | None = None,
     unindexed: frozenset[str] = frozenset(),
+    drug_info: bool = False,
 ) -> Validated:
     check_scope(bundle, patient_id)
     patient_ids = {p.evidence_id for p in bundle.patient_records}
@@ -93,7 +103,7 @@ def validate_statements(
             result.injection_seen = True
             drop("instruction-like text")
             continue
-        if ADVICE.search(text):
+        if (DRUG_ADVICE if drug_info else ADVICE).search(text):
             result.advice_seen = True
             drop("prescribing, dosing or diagnosis advice")
             continue

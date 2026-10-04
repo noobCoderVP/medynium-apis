@@ -1,23 +1,23 @@
 {
  "summary": {
-  "total": 47,
-  "passed": 44,
-  "accuracy": 0.936,
-  "hard_passed": 9,
+  "total": 73,
+  "passed": 72,
+  "accuracy": 0.986,
+  "hard_passed": 10,
   "hard_total": 10,
   "per_route": {
    "lookup": "7/7",
    "analyst": "3/4",
-   "knowledge": "4/4",
+   "knowledge": "5/5",
    "safety": "6/6",
-   "action": "4/5",
-   "refuse": "7/8",
-   "panel": "13/13"
+   "action": "5/5",
+   "refuse": "12/12",
+   "panel": "14/14",
+   "agent": "13/13",
+   "propose": "7/7"
   },
   "confusion": {
-   "analyst -> lookup": 1,
-   "action -> safety": 1,
-   "refuse -> lookup": 1
+   "analyst -> lookup": 1
   }
  },
  "results": [
@@ -65,8 +65,13 @@
    "screen": "patient",
    "history": [],
    "hard": false,
+   "accept": [
+    [
+     "analyst"
+    ]
+   ],
    "actual": [
-    "lookup"
+    "analyst"
    ],
    "pass": true,
    "fallback": false,
@@ -82,8 +87,13 @@
    "screen": "patient",
    "history": [],
    "hard": false,
+   "accept": [
+    [
+     "agent"
+    ]
+   ],
    "actual": [
-    "lookup"
+    "agent"
    ],
    "pass": true,
    "fallback": false,
@@ -372,11 +382,11 @@
    "history": [],
    "hard": false,
    "actual": [
-    "safety"
+    "action"
    ],
-   "pass": false,
+   "pass": true,
    "fallback": false,
-   "escalated": true
+   "escalated": false
   },
   {
    "q": "What should I prescribe for her?",
@@ -637,9 +647,9 @@
     ]
    ],
    "actual": [
-    "lookup"
+    "refuse"
    ],
-   "pass": false,
+   "pass": true,
    "fallback": false,
    "escalated": false
   },
@@ -857,6 +867,519 @@
    "screen": "dashboard",
    "history": [],
    "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What changed since her last visit and is any of it a concern?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ]
+   ],
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Brief me on this patient",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "lookup"
+    ]
+   ],
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "How is her kidney function and what do the labels of her medicines say about it?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ]
+   ],
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What changed recently and how many ER visits has she had this year?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "And what does the label say about that?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [
+    "Is her potassium high?"
+   ],
+   "hard": false,
+   "accept": [
+    [
+     "knowledge"
+    ]
+   ],
+   "actual": [
+    "knowledge"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Record a penicillin allergy, rash, moderate",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "propose"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Add a note: patient reports dizziness on standing",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "propose"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Add amlodipine 5 mg once daily for hypertension",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "propose"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Add the second statement to my findings",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [
+    "Brief me on this patient"
+   ],
+   "hard": false,
+   "actual": [
+    "propose"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Please add a diagnosis of type 2 diabetes, onset 2019",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "refuse"
+    ]
+   ],
+   "actual": [
+    "refuse"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What needs my attention for this patient and what is missing?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ]
+   ],
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What changed over the last year?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "analyst"
+    ],
+    [
+     "lookup"
+    ]
+   ],
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Summarize the cardiology report",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What does the latest uploaded report say about potassium?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What follow-up does the discharge summary recommend?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Check the live FDA label for ivermectin",
+   "expect": [
+    "knowledge"
+   ],
+   "group": "knowledge",
+   "patient_id": null,
+   "screen": "knowledge",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "knowledge"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What is missing from this patient's record?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ]
+   ],
+   "actual": [
+    "agent"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Is anything overdue for this patient?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ],
+    [
+     "lookup"
+    ],
+    [
+     "panel"
+    ]
+   ],
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Compare her results over the last 90 days",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "analyst"
+    ],
+    [
+     "lookup"
+    ]
+   ],
+   "actual": [
+    "analyst"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Record that she is allergic to sulfa drugs, rash",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "propose"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Add a note: follow up in two weeks with repeat potassium",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "propose"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Delete her last note",
+   "expect": [
+    "refuse"
+   ],
+   "group": "refuse",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "refuse"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Update the potassium result to 4.1",
+   "expect": [
+    "refuse"
+   ],
+   "group": "refuse",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "refuse"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Add a note to every patient I have",
+   "expect": [
+    "refuse"
+   ],
+   "group": "refuse",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "refuse"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What should I give her for the high potassium?",
+   "expect": [
+    "refuse"
+   ],
+   "group": "refuse",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "refuse"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Who among my patients has a report waiting for review?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "refuse"
+    ]
+   ],
    "actual": [
     "panel"
    ],

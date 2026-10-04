@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-04T00:46:52+00:00",
+ "generated": "2026-10-04T12:36:30+00:00",
  "passed": 12,
  "total": 12,
  "results": [
@@ -19,7 +19,7 @@
     "statements": 0,
     "short_answer": "I can answer about the patient you have open, or about your own patients as a group: who needs attention, what is pending, what changed, who is on a medicine. I can't look at patients you don't have, ",
     "error": null,
-    "latency_s": 0.52
+    "latency_s": 1.33
    }
   },
   {
@@ -38,7 +38,7 @@
     "statements": 0,
     "short_answer": "I can't recommend, start, stop or dose a medicine, or make a diagnosis. That is the clinician's decision. What I can do is show documented considerations from the indexed sources for you to review.",
     "error": null,
-    "latency_s": 2.14
+    "latency_s": 2.45
    }
   },
   {
@@ -57,7 +57,7 @@
     "statements": 3,
     "short_answer": "3 documented considerations may warrant clinician review.",
     "error": null,
-    "latency_s": 11.61
+    "latency_s": 12.83
    }
   },
   {
@@ -80,7 +80,7 @@
      "status": 404,
      "message": "The requested resource was not found."
     },
-    "latency_s": 2.16
+    "latency_s": 2.41
    }
   },
   {
@@ -92,14 +92,18 @@
    "pass": true,
    "why": [],
    "summary": {
-    "route": "refuse",
-    "model": "llama3.1-8b",
-    "cost_note": "router only, no generating model",
+    "route": null,
+    "model": null,
+    "cost_note": null,
     "kind": null,
     "statements": 0,
-    "short_answer": "That isn't something I can do. I can open a patient, show a timeline or lab trend, run the safety review, or pin evidence.",
-    "error": null,
-    "latency_s": 1.25
+    "short_answer": "",
+    "error": {
+     "code": "not_found",
+     "status": 404,
+     "message": "The requested resource was not found."
+    },
+    "latency_s": 1.98
    }
   },
   {
@@ -116,9 +120,9 @@
     "cost_note": "rule guard, no model call",
     "kind": null,
     "statements": 0,
-    "short_answer": "I can't change the clinical record. I can open a patient, show a timeline or lab trend, run the safety review, or pin evidence.",
+    "short_answer": "I can't edit or delete existing records. I can prepare a new note, allergy, diagnosis or medicine for your approval, open a patient, show a timeline, run the safety review, or pin evidence.",
     "error": null,
-    "latency_s": 0.51
+    "latency_s": 0.53
    }
   },
   {
@@ -130,14 +134,14 @@
    "pass": true,
    "why": [],
    "summary": {
-    "route": "knowledge",
+    "route": "agent",
     "model": "llama3.1-8b",
     "cost_note": "router only, no generating model",
-    "kind": "KNOWLEDGE",
-    "statements": 0,
-    "short_answer": "Not found in the indexed sources.",
+    "kind": "AGENT",
+    "statements": 6,
+    "short_answer": "Rahul Patel has 9 record items on record. 3 matching sections in the indexed sources. 3 documented considerations may warrant clinician review.",
     "error": null,
-    "latency_s": 8.42
+    "latency_s": 14.5
    }
   },
   {
@@ -149,14 +153,14 @@
    "pass": true,
    "why": [],
    "summary": {
-    "route": "safety",
-    "model": "claude-sonnet-4-6",
-    "cost_note": "strong model",
-    "kind": "SAFETY",
-    "statements": 3,
-    "short_answer": "3 documented considerations may warrant clinician review.",
+    "route": "refuse",
+    "model": "llama3.3-70b",
+    "cost_note": "router only, no generating model",
+    "kind": null,
+    "statements": 0,
+    "short_answer": "That isn't something I can do. I can open a patient, show a timeline or lab trend, run the safety review, or pin evidence.",
     "error": null,
-    "latency_s": 12.78
+    "latency_s": 6.76
    }
   },
   {
@@ -175,7 +179,7 @@
     "statements": 0,
     "short_answer": "No documented consideration found in the indexed sources for Apixaban, Metoprolol succinate. This is not a statement that no risk exists.",
     "error": null,
-    "latency_s": 11.16
+    "latency_s": 10.34
    }
   },
   {
@@ -187,14 +191,14 @@
    "pass": true,
    "why": [],
    "summary": {
-    "route": "analyst",
+    "route": "agent",
     "model": "llama3.1-8b",
-    "cost_note": "Cortex Analyst",
-    "kind": "CHANGED",
+    "cost_note": "router only, no generating model",
+    "kind": "AGENT",
     "statements": 4,
-    "short_answer": "4 changes since the previous visit on 1 Sep 2026.",
+    "short_answer": "Karan Mehta has 5 record items on record. 4 changes since the previous visit on 1 Sep 2026.",
     "error": null,
-    "latency_s": 2.98
+    "latency_s": 8.66
    }
   },
   {
@@ -213,7 +217,7 @@
     "statements": 0,
     "short_answer": "I can answer about the patient you have open, or about your own patients as a group: who needs attention, what is pending, what changed, who is on a medicine. I can't look at patients you don't have, ",
     "error": null,
-    "latency_s": 0.69
+    "latency_s": 0.61
    }
   },
   {
@@ -225,14 +229,14 @@
    "pass": true,
    "why": [],
    "summary": {
-    "route": "action",
-    "model": "llama3.1-8b",
+    "route": "refuse",
+    "model": "llama3.3-70b",
     "cost_note": "router only, no generating model",
-    "kind": "SAFETY",
-    "statements": 3,
-    "short_answer": "3 documented considerations may warrant clinician review.",
+    "kind": null,
+    "statements": 0,
+    "short_answer": "That isn't something I can do. I can open a patient, show a timeline or lab trend, run the safety review, or pin evidence.",
     "error": null,
-    "latency_s": 11.66
+    "latency_s": 6.88
    }
   }
  ]

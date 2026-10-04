@@ -3,6 +3,7 @@
 Every request follows the same order: rate limit, entitlement to the open patient (denied equals missing, audited),
 rule guards and the router, then the handler for each step. A step never skips the server checks."""
 
+import re
 import time
 from typing import Any
 
@@ -14,23 +15,43 @@ from medynium_api.core.config import Settings
 from medynium_api.core.cortex.search_client import SearchClient
 from medynium_api.core.errors import ApiError, ErrorCode, not_found
 from medynium_api.core.evidence.models import RouteInfo
+from medynium_api.core.evidence.store import load_evidence
 from medynium_api.core.security.ratelimit import ask_limiter
 from medynium_api.core.session import Session
 from medynium_api.core.snowflake.timing import pad
 from medynium_api.core.streaming import Run
 from medynium_api.features.copilot.actions import Executor
+from medynium_api.features.copilot.approvals import Approvals
 from medynium_api.features.copilot.handlers import Ctx
-from medynium_api.features.copilot.handlers.analyst import run_analyst
-from medynium_api.features.copilot.handlers.knowledge import run_knowledge
-from medynium_api.features.copilot.handlers.lookup import CHANGED, classify, run_changed, run_lookup
+from medynium_api.features.copilot.handlers.drug_info import run_drug_info
+from medynium_api.features.copilot.handlers.propose import run_propose
 from medynium_api.features.copilot.handlers.refuse import run_refuse
-from medynium_api.features.copilot.panel import run_panel
 from medynium_api.features.copilot.ports import Ports
 from medynium_api.features.copilot.repository import CopilotQueries, CopilotRepository
 from medynium_api.features.copilot.routing import NEEDS_PATIENT, Decision, Step, decide
 from medynium_api.features.copilot.safety import SafetyReview
+from medynium_api.features.copilot.tools.compose import run_agent
+from medynium_api.features.copilot.tools.resolve import resolve
 
 log = structlog.get_logger()
+LAB_NAMES = (
+    "eGFR",
+    "Creatinine",
+    "Potassium",
+    "Sodium",
+    "HbA1c",
+    "TSH",
+    "LDL",
+    "Haemoglobin",
+    "Glucose",
+)
+
+
+def _plan_label(step: Step) -> str:
+    """What the planner chose, for the step line: the tools of an agent step, otherwise the route."""
+    if step.route == "agent":
+        return "agent: " + " + ".join(str(t.get("tool")) for t in step.params.get("tools", []))
+    return step.route if not step.action else f"{step.route}: {step.action}"
 
 
 class CopilotService:
@@ -47,6 +68,7 @@ class CopilotService:
         self.search = search or SearchClient(settings)
         self.safety = SafetyReview(settings, self.repo, self.search)
         self.executor = Executor(ports, self.safety)
+        self.ports = ports
 
     def precheck(self, session: Session, patient_id: str, question: str | None) -> None:
         """Entitlement before a stream opens: a denied or missing patient is a plain 404, audited, same latency."""
@@ -71,6 +93,13 @@ class CopilotService:
         ask_limiter.check(session.user_id)
         self.safety.run(session, patient_id, run)
 
+    # POST /agent/proposals/{id}/approve | discard: the only way an assistant-prepared change is written -----------
+    def approve_proposal(self, session: Session, proposal_id: str) -> dict[str, Any]:
+        return Approvals(self.ports).approve(session, proposal_id)
+
+    def discard_proposal(self, session: Session, proposal_id: str) -> dict[str, Any]:
+        return Approvals(self.ports).discard(session, proposal_id)
+
     # POST /agent/actions ---------------------------------------------------------------------------------------
     def action(
         self, session: Session, action: str, params: dict[str, Any], run: Run
@@ -86,13 +115,22 @@ class CopilotService:
         patient_id: str | None,
         history: list[str],
         run: Run,
+        last_answer_id: str | None = None,
     ) -> None:
         ask_limiter.check(session.user_id)
         log.info("ask_start", screen=screen, has_patient=bool(patient_id), history=len(history))
         if patient_id:
             self.precheck(session, patient_id, question)
             log.info("ask_entitled")
-        decision = decide(self.settings, question, screen, patient_id, history)
+        with run.step("Choosing what to read") as plan_step:
+            topics = self._topics(session, patient_id, last_answer_id)
+            decision = decide(self.settings, question, screen, patient_id, history, topics)
+            plan_step.detail = ", ".join(
+                [
+                    decision.model or "rules, no model",
+                    *(_plan_label(s) for s in decision.steps),
+                ]
+            )
         log.info(
             "ask_routed",
             routes=[s.route for s in decision.steps],
@@ -127,6 +165,9 @@ class CopilotService:
                 self.queries,
                 self.search,
                 history,
+                self.safety,
+                self.ports,
+                last_answer_id,
             )
             try:
                 context_patient = (
@@ -154,8 +195,44 @@ class CopilotService:
                 ms=round((time.monotonic() - step_started) * 1000),
             )  # fmt: skip
 
+    def _topics(self, session: Session, patient_id: str | None, answer_id: str | None) -> list[str]:
+        """Drug and lab names from the previous answer, taken from a closed vocabulary (never free text), so the
+        planner can resolve "that medicine" or "it" without seeing any patient text. Own answers only."""
+        if not answer_id or not patient_id:
+            return []
+        try:
+            evidence = load_evidence(session, answer_id)
+            if evidence is None or evidence.patient_id != patient_id:
+                return []
+            text = " ".join(p.value for p in evidence.patient_records).lower()
+            words = sorted(set(re.findall(r"[a-z][a-z0-9-]{3,}", text)))
+            labs = [lab for lab in LAB_NAMES if lab.lower() in text]
+            drugs = [
+                r["display_name"]
+                for r in self.queries.resolve_names(session.snowflake_role, words[:200])
+            ]
+            return list(dict.fromkeys([*drugs, *labs]))[:6]
+        except Exception:  # memory is a convenience; a failure never blocks the answer
+            log.warning("topics_failed")
+            return []
+
     def _info(self, decision: Decision, step: Step) -> RouteInfo:
-        free = step.route in ("lookup", "action", "refuse", "knowledge", "panel")
+        free = step.route in (
+            "lookup",
+            "action",
+            "refuse",
+            "knowledge",
+            "panel",
+            "agent",
+            "propose",
+        )
+        if step.route == "drug":
+            return RouteInfo(
+                route="drug",
+                model=self.settings.strong_model,
+                confidence=step.confidence if decision.model else None,
+                cost_note="label search, then strong model",
+            )
         if decision.model is None:
             note = "rule guard, no model call"
         elif free:
@@ -178,16 +255,6 @@ class CopilotService:
         if route == "refuse":
             run_refuse(ctx, run, decision.refuse_reason or "unlisted_action")
             return None
-        if route == "panel":
-            try:
-                if run_panel(ctx, run) is None:
-                    run_refuse(ctx, run, "needs_clarification")
-            except (
-                LookupError
-            ):  # a patient the caller cannot see is answered exactly like one that does not exist
-                pad(time.monotonic())
-                raise ApiError(ErrorCode.NOT_FOUND) from None
-            return None
         if route in NEEDS_PATIENT and not patient_id:
             run_refuse(ctx, run, "needs_patient")
             return None
@@ -201,24 +268,31 @@ class CopilotService:
                 question=ctx.question,
             )
             return result.get("patient_id")
+        if route == "propose":
+            run_propose(ctx, run)
+            return None
+        if route == "drug":
+            try:
+                run_drug_info(ctx, run)
+            except LookupError:
+                pad(time.monotonic())
+                raise ApiError(ErrorCode.NOT_FOUND) from None
+            return None
+        if route == "agent":
+            try:
+                run_agent(ctx, run)
+            except LookupError:
+                pad(time.monotonic())
+                raise ApiError(ErrorCode.NOT_FOUND) from None
+            return None
+        tool = resolve(ctx)
+        log.info("ask_tool", tool=tool.name, group=tool.group)
         try:
-            if route == "lookup":
-                kind = classify(ctx.question)
-                if kind == "CHANGED":
-                    run_changed(ctx, run)
-                elif kind:
-                    run_lookup(ctx, run, kind)
-                else:
-                    run_analyst(ctx, run)
-            elif route == "analyst":
-                run_changed(ctx, run) if CHANGED.search(ctx.question) else run_analyst(ctx, run)
-            elif route == "knowledge":
-                run_knowledge(ctx, run)
-            else:
-                self.safety.run(
-                    ctx.session, patient_id or "", run, question=ctx.question, route=ctx.info
-                )
-        except LookupError:
+            if tool.handler(ctx, run) is None and route == "panel":
+                run_refuse(ctx, run, "needs_clarification")
+        except (
+            LookupError
+        ):  # a patient the caller cannot see is answered exactly like one that does not exist
             pad(time.monotonic())
             raise ApiError(ErrorCode.NOT_FOUND) from None
         return None

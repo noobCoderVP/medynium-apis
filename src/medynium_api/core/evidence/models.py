@@ -9,7 +9,17 @@ from pydantic import BaseModel, Field
 # rule_check is only ever made by a code rule (features/copilot/rules.py); the validator drops it from model output.
 Tag = Literal["patient_fact", "retrieved_source", "ai_synthesis", "rule_check"]
 Kind = Literal[
-    "SAFETY", "CHANGED", "MEDS", "LABS", "UTIL", "SUMMARY", "ANALYST", "KNOWLEDGE", "PANEL"
+    "SAFETY",
+    "CHANGED",
+    "MEDS",
+    "LABS",
+    "UTIL",
+    "SUMMARY",
+    "ANALYST",
+    "KNOWLEDGE",
+    "PANEL",
+    "AGENT",
+    "DRUG",
 ]
 
 

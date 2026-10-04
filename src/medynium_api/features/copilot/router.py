@@ -16,6 +16,8 @@ from medynium_api.features.copilot.schemas import (
     ActionResponse,
     AskRequest,
     AskResult,
+    ProposalDiscarded,
+    ProposalResult,
 )
 from medynium_api.features.copilot.service import CopilotService
 
@@ -69,7 +71,15 @@ def ask(body: AskRequest, request: Request, session: CurrentSession, service: Se
         service.precheck(session, body.patient_id, body.question)
 
     def work(run: Run) -> None:
-        service.ask(session, body.question, body.screen, body.patient_id, body.history, run)
+        service.ask(
+            session,
+            body.question,
+            body.screen,
+            body.patient_id,
+            body.history,
+            run,
+            body.last_answer_id,
+        )
 
     if wants_stream(request):
         return stream_response(request, work)
@@ -77,6 +87,7 @@ def ask(body: AskRequest, request: Request, session: CurrentSession, service: Se
     return AskResult(
         routes=[d for e, d in run.events if e == "route"],
         actions=[d for e, d in run.events if e == "action"],
+        proposals=[d for e, d in run.events if e == "proposal"],
         answer=run.last("answer"),
         refusal=run.last("refusal"),
         steps=run.steps,
@@ -90,3 +101,21 @@ def agent_action(body: ActionRequest, session: CurrentSession, service: Service)
     run = Run()
     result = service.action(session, body.action, body.params, run)
     return ActionResponse(action=body.action, result=result, audit_id=run.audit_id)
+
+
+@router.post(
+    "/agent/proposals/{proposal_id}/approve",
+    responses={403: {"model": ErrorBody}, 409: {"model": ErrorBody}},
+)
+def approve_proposal(proposal_id: str, session: CurrentSession, service: Service) -> ProposalResult:
+    """Write a change the assistant prepared, after the clinician approved its preview. Same service, same checks and
+    audit as the manual screen. Doctors only; someone else's or an expired proposal is 404."""
+    return ProposalResult.model_validate(service.approve_proposal(session, proposal_id))
+
+
+@router.post("/agent/proposals/{proposal_id}/discard")
+def discard_proposal(
+    proposal_id: str, session: CurrentSession, service: Service
+) -> ProposalDiscarded:
+    """Drop a prepared change. Nothing was written."""
+    return ProposalDiscarded.model_validate(service.discard_proposal(session, proposal_id))

@@ -3,8 +3,9 @@ import datetime as dt
 from medynium_api.core.pagination import PageParams
 from medynium_api.core.session import Session
 from medynium_api.core.snowflake.queries import json_value
+from medynium_api.features.audit.metrics import summarise
 from medynium_api.features.audit.repository import AuditRepository
-from medynium_api.features.audit.schemas import AuditItem, AuditPage
+from medynium_api.features.audit.schemas import AiMetrics, AuditItem, AuditPage
 
 
 class AuditService:
@@ -58,3 +59,9 @@ class AuditService:
             for r in rows
         ]
         return AuditPage(items=items, total=total, limit=page.limit, offset=page.offset)
+
+    def metrics(self, session: Session, days: int) -> AiMetrics:
+        rows = self.repo.recent(session.snowflake_role, days)
+        for r in rows:
+            r["steps"] = json_value(r["steps"]) or []
+        return summarise(rows, days)

@@ -15,6 +15,7 @@ import time
 import structlog
 
 from medynium_api.core.config import get_settings
+from medynium_api.core.intel import doctors
 from medynium_api.core.snowflake.queries import json_value
 from medynium_api.core.snowflake.role_session import service_cursor
 
@@ -27,13 +28,21 @@ def pending(patient_id: str) -> bool:
     """Is a refresh for this patient still owed? The screens show "updating" until it clears."""
     with service_cursor() as cur:
         cur.execute("CALL INTAKE.PENDING_REFRESH(%s)", (patient_id,))
-        return int(next(iter(cur.fetchone().values())) or 0) > 0
+        owed = int(next(iter(cur.fetchone().values())) or 0) > 0
+    # A refresh marks the queue rows it covers as done, including a write that landed while it was reading; that write
+    # is rebuilt by the refresh queued behind it. Until that one has run, the screens must keep saying "updating".
+    return owed or refresh_worker.busy(patient_id)
 
 
 class RefreshWorker:
     def __init__(self, workers: int = 2) -> None:
-        self._jobs: queue.Queue[str] = queue.Queue()
+        self._jobs: queue.Queue[tuple[str, int]] = queue.Queue()
         self._waiting: set[str] = set()
+        self._locks: dict[str, threading.Lock] = {}
+        self._queued: dict[str, int] = {}
+        self._gen: dict[str, int] = {}  # writes queued so far, per patient
+        self._covered: dict[str, int] = {}  # the newest of them a finished refresh has already read
+        self._running: dict[str, int] = {}
         self._lock = threading.Lock()
         self._workers = workers
         self._threads: list[threading.Thread] = []
@@ -45,8 +54,10 @@ class RefreshWorker:
         with self._lock:
             if patient_id in self._waiting:
                 return
+            self._queued[patient_id] = self._queued.get(patient_id, 0) + 1
+            self._gen[patient_id] = generation = self._gen.get(patient_id, 0) + 1
             self._waiting.add(patient_id)
-        self._jobs.put(patient_id)
+        self._jobs.put((patient_id, generation))
 
     def ensure_started(self) -> None:
         with self._lock:
@@ -69,14 +80,19 @@ class RefreshWorker:
     def _work(self) -> None:
         while not self._stop.is_set():
             try:
-                patient_id = self._jobs.get(timeout=1)
+                patient_id, generation = self._jobs.get(timeout=1)
             except queue.Empty:
                 continue
             with self._lock:
                 self._waiting.discard(
                     patient_id
                 )  # a write that lands from now on queues a new refresh
-            self.refresh_now(patient_id)
+                self._queued[patient_id] -= 1
+                self._running[patient_id] = self._running.get(patient_id, 0) + 1
+            try:
+                self._locked_refresh(patient_id, generation)
+            finally:
+                self._done(patient_id)
 
     def _sweep(self) -> None:
         while not self._stop.wait(SWEEP_SECONDS):
@@ -90,9 +106,45 @@ class RefreshWorker:
             except Exception as exc:
                 log.error("refresh_sweep_failed", error=type(exc).__name__)
 
-    @staticmethod
-    def refresh_now(patient_id: str) -> bool:
+    def busy(self, patient_id: str) -> bool:
+        """Is a refresh for this patient queued or running in this process?"""
+        with self._lock:
+            return self._queued.get(patient_id, 0) + self._running.get(patient_id, 0) > 0
+
+    def _done(self, patient_id: str) -> None:
+        with self._lock:
+            self._running[patient_id] -= 1
+
+    def refresh_now(self, patient_id: str) -> bool:
+        with self._lock:
+            self._running[patient_id] = self._running.get(patient_id, 0) + 1
+        try:
+            return self._locked_refresh(patient_id)
+        finally:
+            self._done(patient_id)
+
+    def _locked_refresh(self, patient_id: str, generation: int | None = None) -> bool:
         started = time.perf_counter()
+        # One refresh per patient at a time: two overlapping rebuilds of the same patient (a second write while the
+        # first refresh runs) interleave their delete and insert and leave duplicate rows in the read models.
+        with self._patient_lock(patient_id):
+            with self._lock:
+                if generation is not None and generation <= self._covered.get(patient_id, 0):
+                    return True  # a refresh that started after this write has already read it
+                read_up_to = self._gen.get(patient_id, 0)  # every write queued so far is committed
+            done = self._refresh(patient_id, started)
+            doctors.forget(patient_id)  # whatever changed, the doctor behind it may have too
+            if done:
+                with self._lock:
+                    self._covered[patient_id] = max(self._covered.get(patient_id, 0), read_up_to)
+            return done
+
+    def _patient_lock(self, patient_id: str) -> threading.Lock:
+        with self._lock:
+            return self._locks.setdefault(patient_id, threading.Lock())
+
+    @staticmethod
+    def _refresh(patient_id: str, started: float) -> bool:
         try:
             with service_cursor() as cur:
                 cur.execute(

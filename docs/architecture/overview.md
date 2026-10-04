@@ -21,7 +21,7 @@ flowchart LR
   subgraph Vercel
     UI[Next.js workstation<br/>medynium-ui]
   end
-  subgraph Render
+  subgraph CloudRun [Google Cloud Run]
     API[FastAPI<br/>medynium-apis]
   end
   UI -->|same-origin /api proxy<br/>httpOnly cookies| API
@@ -144,7 +144,7 @@ Column-level detail: [../database/README.md](../database/README.md).
 | Piece | Host | Notes |
 | --- | --- | --- |
 | UI | Vercel | `BACKEND_URL` set to the API. Proxies `/api/*`. |
-| API | Render web service, Docker, always on | Secrets in the Render dashboard. `/health` is the health check. |
+| API | Google Cloud Run, Docker, minimum one instance | Secrets in Secret Manager. `/health` is the health check. |
 | Snowflake | Trial account `PSYMVEK-AI12714`, region Azure Central India | XSMALL warehouse `MEDYNIUM_WH`, auto-suspend 60 s, resource monitor 50% notify and 80% suspend. |
 | CI | GitHub Actions | Lint, types, tests, OpenAPI freshness, Docker build. |
 

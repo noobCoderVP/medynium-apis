@@ -1,6 +1,7 @@
 """Build, store and announce a finished answer. Shared by every route that produces one."""
 
 import datetime as dt
+from dataclasses import dataclass
 
 from medynium_api.core.audit.writer import AuditEntry, write_audit
 from medynium_api.core.evidence.models import (
@@ -16,6 +17,18 @@ from medynium_api.core.evidence.store import save_answer
 from medynium_api.core.ids import new_id
 from medynium_api.core.session import Session
 from medynium_api.core.streaming import Run
+
+
+@dataclass
+class Collected:
+    """One tool's finished result, held back so several tools can feed one composed answer."""
+
+    kind: Kind
+    short_answer: str
+    considerations: list[Consideration]
+    limits: Limits
+    conflicts: list[ConflictItem]
+    bundle: EvidenceBundle
 
 
 def finalize(
@@ -37,6 +50,17 @@ def finalize(
     outcome_detail: str | None = None,
 ) -> AnswerObject:
     """Store the answer and its evidence, write the audit row (steps equal what was streamed), emit `answer`."""
+    if (
+        run.collector is not None
+    ):  # agent composition: keep the result, store and announce only the composed answer
+        run.collector.append(
+            Collected(kind, short_answer, considerations, limits, conflicts, bundle)
+        )
+        return AnswerObject(
+            answer_id="collected", kind=kind, patient_id=patient_id, short_answer=short_answer,
+            considerations=considerations, limits=limits, conflicts=conflicts, route=route,
+            created_at=dt.datetime.now(dt.UTC).replace(tzinfo=None),
+        )  # fmt: skip
     cited_patient = sorted({e for c in considerations for e in c.patient_evidence})
     cited_sources = {e for c in considerations for e in c.source_evidence}
     for source in bundle.sources:

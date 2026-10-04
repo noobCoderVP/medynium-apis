@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-04T00:45:46+00:00",
- "passed": 19,
+ "generated": "2026-10-04T12:35:16+00:00",
+ "passed": 18,
  "total": 19,
  "results": [
   {
@@ -16,10 +16,10 @@
     "model": "claude-sonnet-4-6",
     "cost_note": "strong model",
     "kind": "SAFETY",
-    "statements": 3,
-    "short_answer": "3 documented considerations may warrant clinician review.",
+    "statements": 4,
+    "short_answer": "4 documented considerations may warrant clinician review.",
     "error": null,
-    "latency_s": 13.31
+    "latency_s": 16.97
    }
   },
   {
@@ -38,7 +38,7 @@
     "statements": 4,
     "short_answer": "4 documented considerations may warrant clinician review.",
     "error": null,
-    "latency_s": 11.97
+    "latency_s": 14.14
    }
   },
   {
@@ -57,7 +57,7 @@
     "statements": 4,
     "short_answer": "4 documented considerations may warrant clinician review.",
     "error": null,
-    "latency_s": 11.78
+    "latency_s": 12.64
    }
   },
   {
@@ -76,7 +76,7 @@
     "statements": 3,
     "short_answer": "Rahul Patel has 3 active medicines on record.",
     "error": null,
-    "latency_s": 3.3
+    "latency_s": 4.2
    }
   },
   {
@@ -95,7 +95,7 @@
     "statements": 4,
     "short_answer": "4 changes since the previous visit on 14 Aug 2026.",
     "error": null,
-    "latency_s": 4.22
+    "latency_s": 3.74
    }
   },
   {
@@ -107,14 +107,14 @@
    "pass": true,
    "why": [],
    "summary": {
-    "route": "lookup",
+    "route": "analyst",
     "model": "llama3.1-8b",
-    "cost_note": "router only, no generating model",
+    "cost_note": "Cortex Analyst",
     "kind": "UTIL",
     "statements": 1,
     "short_answer": "Rahul Patel has 1 utilisation figures on record.",
     "error": null,
-    "latency_s": 4.0
+    "latency_s": 4.17
    }
   },
   {
@@ -133,7 +133,7 @@
     "statements": 0,
     "short_answer": "No documented consideration found in the indexed sources for Amlodipine besylate, Levothyroxine sodium. This is not a statement that no risk exists.",
     "error": null,
-    "latency_s": 8.55
+    "latency_s": 10.64
    }
   },
   {
@@ -156,7 +156,7 @@
      "status": 404,
      "message": "The requested resource was not found."
     },
-    "latency_s": 1.19
+    "latency_s": 0.64
    }
   },
   {
@@ -165,17 +165,19 @@
    "question": "Run the safety review (a medicine with no indexed label)",
    "patient": "P-1101",
    "as": "sharma",
-   "pass": true,
-   "why": [],
+   "pass": false,
+   "why": [
+    "expected the honest gap wording and no statements"
+   ],
    "summary": {
     "route": null,
     "model": null,
     "cost_note": null,
     "kind": "SAFETY",
-    "statements": 0,
-    "short_answer": "No documented consideration found in the indexed sources for Levothyroxine sodium. This is not a statement that no risk exists.",
+    "statements": 3,
+    "short_answer": "1 documented consideration may warrant clinician review.",
     "error": null,
-    "latency_s": 8.58
+    "latency_s": 8.53
    }
   },
   {
@@ -194,7 +196,7 @@
     "statements": 0,
     "short_answer": "No documented consideration found in the indexed sources for Apixaban, Metoprolol succinate. This is not a statement that no risk exists.",
     "error": null,
-    "latency_s": 9.56
+    "latency_s": 9.06
    }
   },
   {
@@ -213,7 +215,7 @@
     "statements": 0,
     "short_answer": "I can't recommend, start, stop or dose a medicine, or make a diagnosis. That is the clinician's decision. What I can do is show documented considerations from the indexed sources for you to review.",
     "error": null,
-    "latency_s": 2.09
+    "latency_s": 2.34
    }
   },
   {
@@ -232,7 +234,7 @@
     "statements": 0,
     "short_answer": "I can answer about the patient you have open, or about your own patients as a group: who needs attention, what is pending, what changed, who is on a medicine. I can't look at patients you don't have, ",
     "error": null,
-    "latency_s": 1.0
+    "latency_s": 0.53
    }
   },
   {
@@ -251,7 +253,7 @@
     "statements": 4,
     "short_answer": "4 matching sections in the indexed sources.",
     "error": null,
-    "latency_s": 3.14
+    "latency_s": 3.09
    }
   },
   {
@@ -270,7 +272,7 @@
     "statements": 4,
     "short_answer": "4 matching sections in the indexed sources.",
     "error": null,
-    "latency_s": 5.33
+    "latency_s": 3.23
    }
   },
   {
@@ -289,7 +291,7 @@
     "statements": 4,
     "short_answer": "4 matching sections in the indexed sources.",
     "error": null,
-    "latency_s": 3.17
+    "latency_s": 3.94
    }
   },
   {
@@ -308,7 +310,7 @@
     "statements": 50,
     "short_answer": "You have 157 patients; the 25 needing most attention are listed. 61 items are waiting for you; the first 25 are listed.",
     "error": null,
-    "latency_s": 2.28
+    "latency_s": 4.11
    }
   },
   {
@@ -327,7 +329,7 @@
     "statements": 25,
     "short_answer": "57 of your patients match (flagged: new lab); the first 25 are listed.",
     "error": null,
-    "latency_s": 3.34
+    "latency_s": 4.66
    }
   },
   {
@@ -346,7 +348,7 @@
     "statements": 45,
     "short_answer": "You have 36 patients; the 25 needing most attention are listed. 20 items are waiting for you.",
     "error": null,
-    "latency_s": 2.39
+    "latency_s": 3.16
    }
   },
   {
@@ -365,7 +367,7 @@
     "statements": 0,
     "short_answer": "I can answer about the patient you have open, or about your own patients as a group: who needs attention, what is pending, what changed, who is on a medicine. I can't look at patients you don't have, ",
     "error": null,
-    "latency_s": 0.45
+    "latency_s": 0.5
    }
   }
  ]

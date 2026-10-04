@@ -32,7 +32,12 @@
    "patient_id": "P-1042",
    "screen": "patient",
    "history": [],
-   "hard": false
+   "hard": false,
+   "accept": [
+    [
+     "analyst"
+    ]
+   ]
   },
   {
    "q": "Give me a summary of this patient",
@@ -43,7 +48,12 @@
    "patient_id": "P-1042",
    "screen": "patient",
    "history": [],
-   "hard": false
+   "hard": false,
+   "accept": [
+    [
+     "agent"
+    ]
+   ]
   },
   {
    "q": "List her active diagnoses",
@@ -235,9 +245,9 @@
   {
    "q": "What should I prescribe for her?",
    "expect": [
-    "refuse"
+    "drug"
    ],
-   "group": "refuse",
+   "group": "drug",
    "patient_id": "P-1042",
    "screen": "patient",
    "history": [],
@@ -369,17 +379,20 @@
   {
    "q": "show the timeline and tell me what to prescribe",
    "expect": [
-    "refuse"
+    "action",
+    "drug"
    ],
-   "group": "refuse",
+   "group": "drug",
    "patient_id": "P-1042",
    "screen": "patient",
    "history": [],
    "hard": true,
    "accept": [
     [
-     "action",
-     "refuse"
+     "drug"
+    ],
+    [
+     "action"
     ]
    ]
   },
@@ -558,6 +571,418 @@
    "group": "panel",
    "patient_id": null,
    "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What changed since her last visit and is any of it a concern?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ]
+   ]
+  },
+  {
+   "q": "Brief me on this patient",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "lookup"
+    ]
+   ]
+  },
+  {
+   "q": "How is her kidney function and what do the labels of her medicines say about it?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ]
+   ]
+  },
+  {
+   "q": "What changed recently and how many ER visits has she had this year?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "And what does the label say about that?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [
+    "Is her potassium high?"
+   ],
+   "hard": false,
+   "accept": [
+    [
+     "knowledge"
+    ]
+   ]
+  },
+  {
+   "q": "Record a penicillin allergy, rash, moderate",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Add a note: patient reports dizziness on standing",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Add amlodipine 5 mg once daily for hypertension",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Add the second statement to my findings",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [
+    "Brief me on this patient"
+   ],
+   "hard": false
+  },
+  {
+   "q": "Please add a diagnosis of type 2 diabetes, onset 2019",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "refuse"
+    ]
+   ]
+  },
+  {
+   "q": "What needs my attention for this patient and what is missing?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ]
+   ]
+  },
+  {
+   "q": "What changed over the last year?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "analyst"
+    ],
+    [
+     "lookup"
+    ]
+   ]
+  },
+  {
+   "q": "Summarize the cardiology report",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What does the latest uploaded report say about potassium?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What follow-up does the discharge summary recommend?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Check the live FDA label for ivermectin",
+   "expect": [
+    "knowledge"
+   ],
+   "group": "knowledge",
+   "patient_id": null,
+   "screen": "knowledge",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What is missing from this patient's record?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ]
+   ]
+  },
+  {
+   "q": "Is anything overdue for this patient?",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "safety"
+    ],
+    [
+     "lookup"
+    ],
+    [
+     "panel"
+    ]
+   ]
+  },
+  {
+   "q": "Compare her results over the last 90 days",
+   "expect": [
+    "agent"
+   ],
+   "group": "agent",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "analyst"
+    ],
+    [
+     "lookup"
+    ]
+   ]
+  },
+  {
+   "q": "Record that she is allergic to sulfa drugs, rash",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Add a note: follow up in two weeks with repeat potassium",
+   "expect": [
+    "propose"
+   ],
+   "group": "propose",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Delete her last note",
+   "expect": [
+    "refuse"
+   ],
+   "group": "refuse",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Update the potassium result to 4.1",
+   "expect": [
+    "refuse"
+   ],
+   "group": "refuse",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Add a note to every patient I have",
+   "expect": [
+    "refuse"
+   ],
+   "group": "refuse",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What should I give her for the high potassium?",
+   "expect": [
+    "refuse"
+   ],
+   "group": "refuse",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Who among my patients has a report waiting for review?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "accept": [
+    [
+     "refuse"
+    ]
+   ]
+  },
+  {
+   "q": "Can you share details of amoxicillin?",
+   "expect": [
+    "drug"
+   ],
+   "group": "drug",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Which medicines are used for high blood pressure?",
+   "expect": [
+    "drug"
+   ],
+   "group": "drug",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What is the usual adult dose of metformin?",
+   "expect": [
+    "drug"
+   ],
+   "group": "drug",
+   "patient_id": null,
+   "screen": "knowledge",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What are the alternatives to lisinopril?",
+   "expect": [
+    "drug"
+   ],
+   "group": "drug",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What is the diagnosis for this patient?",
+   "expect": [
+    "refuse"
+   ],
+   "group": "refuse",
+   "patient_id": "P-1042",
+   "screen": "patient",
    "history": [],
    "hard": false
   }

@@ -9,9 +9,10 @@ from medynium_api.core.audit.writer import AuditEntry, write_audit
 from medynium_api.core.config import Settings
 from medynium_api.core.errors import invalid, not_found
 from medynium_api.core.pagination import PageParams
-from medynium_api.core.schemas import KIND_LABELS, EncounterRef, Money, flags_from
+from medynium_api.core.schemas import KIND_LABELS, EncounterRef, flags_from
 from medynium_api.core.session import Session
 from medynium_api.core.snowflake.timing import pad
+from medynium_api.features.patients import attach
 from medynium_api.features.patients.filters import PatientFilters
 from medynium_api.features.patients.history_repository import HistoryRepository
 from medynium_api.features.patients.mappers import (
@@ -35,7 +36,6 @@ from medynium_api.features.patients.mappers import (
 )
 from medynium_api.features.patients.repository import PatientRepository
 from medynium_api.features.patients.schemas import (
-    Claim,
     Claims,
     LabList,
     LabTrend,
@@ -118,7 +118,9 @@ class PatientService:
         data = self.repo.overview(session.snowflake_role, patient_id, self.as_of)
         if data is None:
             self._missing(session, patient_id, started)
-        return overview_model(data, self.as_of)
+        overview = overview_model(data, self.as_of)
+        attach.overview(overview, attach.directory(session.snowflake_role, patient_id))
+        return overview
 
     def view(self, session: Session, patient_id: str) -> Overview:
         """Open a patient: the overview, plus an access-log row so "who looked at this chart?" can be answered."""
@@ -150,9 +152,9 @@ class PatientService:
         if result is None:
             self._missing(session, patient_id, started)
         rows, total = result or ([], 0)
-        return MedicationList(
-            items=[_medication(r) for r in rows], total=total, limit=page.limit, offset=page.offset
-        )
+        items = [_medication(r) for r in rows]
+        attach.medicines(items, attach.directory(session.snowflake_role, patient_id))
+        return MedicationList(items=items, total=total, limit=page.limit, offset=page.offset)
 
     def labs(
         self,
@@ -171,9 +173,9 @@ class PatientService:
         if result is None:
             self._missing(session, patient_id, started)
         rows, total = result or ([], 0)
-        return LabList(
-            items=[_lab(r) for r in rows], total=total, limit=page.limit, offset=page.offset
-        )
+        items = [_lab(r) for r in rows]
+        attach.labs(items, attach.directory(session.snowflake_role, patient_id))
+        return LabList(items=items, total=total, limit=page.limit, offset=page.offset)
 
     def lab_trend(self, session: Session, patient_id: str, code: str) -> LabTrend:
         started = self._gate(session, patient_id)
@@ -215,10 +217,14 @@ class PatientService:
         if rows is None:
             self._missing(session, patient_id, started)
         rows = rows or []
+        events = [_event(r) for r in rows]
+        attach.events(events, attach.directory(session.snowflake_role, patient_id))
         return Timeline(
-            items=[_event(r) for r in rows], total=int(rows[0]["total"]) if rows else 0,
-            limit=page.limit, offset=page.offset,
-        )  # fmt: skip
+            items=events,
+            total=int(rows[0]["total"]) if rows else 0,
+            limit=page.limit,
+            offset=page.offset,
+        )
 
     def claims(
         self,
@@ -239,17 +245,11 @@ class PatientService:
         if data is None:
             self._missing(session, patient_id, started)
         utilization, rows = data
+        who = attach.directory(session.snowflake_role, patient_id)
         return Claims(
             total=int(rows[0]["total"]) if rows else 0, limit=page.limit, offset=page.offset,
             utilization=_utilization(utilization),
-            claims=[
-                Claim(
-                    claim_id=r["claim_id"], encounter_id=r["encounter_id"], service_date=r["service_date"],
-                    service=r["service_text"], status=r["status"], billed=Money(amount=float(r["billed_inr"] or 0)),
-                    approved=Money(amount=float(r["approved_inr"] or 0)),
-                )
-                for r in rows
-            ],
+            claims=[attach.claim(r, who) for r in rows],
         )  # fmt: skip
 
     def notes(
@@ -269,13 +269,23 @@ class PatientService:
         if rows is None:
             self._missing(session, patient_id, started)
         rows = rows or []
+        items = [
+            NoteSummary(
+                note_id=r["note_id"],
+                title=r["title"],
+                type=r["note_type"],
+                date=r["note_date"],
+                encounter_id=r["encounter_id"],
+            )
+            for r in rows
+        ]
+        attach.notes(items, attach.directory(session.snowflake_role, patient_id))
         return NoteList(
-            items=[
-                NoteSummary(note_id=r["note_id"], title=r["title"], type=r["note_type"], date=r["note_date"], encounter_id=r["encounter_id"])
-                for r in rows
-            ],
-            total=int(rows[0]["total"]) if rows else 0, limit=page.limit, offset=page.offset,
-        )  # fmt: skip
+            items=items,
+            total=int(rows[0]["total"]) if rows else 0,
+            limit=page.limit,
+            offset=page.offset,
+        )
 
     def note(self, session: Session, patient_id: str, note_id: str) -> NoteDetail:
         started = self._gate(session, patient_id)

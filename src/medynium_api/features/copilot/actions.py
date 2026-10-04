@@ -1,7 +1,8 @@
 """The closed action set (SEC-12, AI-10, AI-11): exactly four actions, each with typed params, enforced here on the
 server whatever the router or the prompt said. Each runs under the caller's own session through the same services the
 UI uses (SEC-11), so entitlement and audit apply identically. Anything else is `action_not_allowed` and is audited.
-The agent never writes to the clinical record and never acts unprompted."""
+The agent never writes to the clinical record on its own and never acts unprompted. A change to the record is a
+proposal (proposals.py) that only the clinician's Approve click carries out."""
 
 import datetime as dt
 from typing import Any

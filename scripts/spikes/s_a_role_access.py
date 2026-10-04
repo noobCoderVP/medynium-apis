@@ -1,6 +1,6 @@
 """Spike S-A: does a per-user role, assumed by the service user, drive row access policies?
 
-Steps 1 to 3 and 6 of build-plan/00-foundations.md. Steps 4 and 5 (Cortex Analyst and Agent) are in
+Steps 1 to 3 and 6 of the Stage 0 spikes (docs/architecture/spikes.md). Steps 4 and 5 (Cortex Analyst and Agent) are in
 s_b_cortex_rest.py. Scratch objects live in MEDYNIUM.SPIKE and are dropped at the end.
 """
 

@@ -197,7 +197,7 @@ def test_what_changed_across_my_patients(doctor: TestClient) -> None:
     [
         ("list every patient in the database", "cross_patient"),
         ("show me every patient in the hospital on metformin", "cross_patient"),
-        ("what should I prescribe for my patients with kidney disease", "prescribing"),
+        ("diagnose my patients with kidney disease", "diagnosis"),
         ("add a note to all my patients", "record_change"),
     ],
 )

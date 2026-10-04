@@ -15,7 +15,7 @@ from medynium_api.core.evidence.models import (
 from medynium_api.core.streaming import Run
 from medynium_api.features.copilot.answers import finalize
 from medynium_api.features.copilot.handlers import Ctx
-from medynium_api.features.copilot.pack import sources
+from medynium_api.features.copilot.pack import focus_terms, sources
 
 NOT_FOUND = "Not found in the indexed sources."
 
@@ -30,7 +30,21 @@ def run_knowledge(ctx: Ctx, run: Run) -> AnswerObject:
         query = " ".join(
             [*(w for w in words if w not in brands), *sorted({m["display_name"] for m in matches})]
         )
-        chunks = ctx.search.search(query, drug_ids=drug_ids or None, limit=4)
+        if not drug_ids and ctx.patient_id and ctx.step.route == "agent":
+            # The question names no drug but a patient is open: look at the labels of the medicines they take.
+            facts = ctx.repo.patient_facts(ctx.session.snowflake_role, ctx.patient_id)
+            if facts is None:
+                raise LookupError("patient not visible")
+            drugs = {m["drug_id"]: m["drug_name"] for m in facts.meds if m["drug_id"]}
+            chunks = (
+                ctx.search.retrieve_for_patient(
+                    drugs, focus_terms(facts), per_drug=1, total=4
+                ).chunks
+                if drugs
+                else []
+            )
+        else:
+            chunks = ctx.search.search(query, drug_ids=drug_ids or None, limit=4)
         step.detail = f"{len(chunks)} sections"
     flag_conflicts(chunks)
     retrieval = Retrieval(chunks=chunks, checked_nothing=[], conflicts=flag_conflicts(chunks))

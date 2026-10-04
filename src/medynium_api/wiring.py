@@ -7,9 +7,10 @@ from medynium_api.features.patients.filters import PatientFilters
 from medynium_api.features.patients.repository import PatientRepository
 from medynium_api.features.pins.schemas import PinCreate
 from medynium_api.features.pins.service import PinService
+from medynium_api.proposal_ports import ProposalPorts
 
 
-class AppPorts:
+class AppPorts(ProposalPorts):
     def find_patients(self, session: Session, query: str, limit: int) -> list[PatientRef]:
         rows, _ = PatientRepository().list_patients(
             session.snowflake_role, PatientFilters(q=query), limit, 0

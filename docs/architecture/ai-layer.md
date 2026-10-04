@@ -140,7 +140,7 @@ Closed allowlist, enforced in the API (SEC-12):
 | `run_safety_review` | `patient_id` | "Run safety review" button |
 | `pin_evidence` | `answer_id`, `evidence_id` | Pin icon in the Why? panel |
 
-Actions call the same internal functions as the UI endpoints under the user's session. Anything else returns `action_not_allowed` and is audited. The agent never writes to the clinical record.
+Actions call the same internal functions as the UI endpoints under the user's session. Anything else returns `action_not_allowed` and is audited. The agent never writes to the clinical record on its own. A new note, allergy, diagnosis or medicine, a raised finding or a decision on the one open finding is a proposal (`features/copilot/proposals.py`): the planner route `propose` validates the arguments with the manual screen's own models and the preview is shown; `POST /agent/proposals/{id}/approve` (doctors only, own unexpired proposals) calls the real service as the clinician, with the proposal id as idempotency key, and audits `AGENT_PROPOSED_WRITE`.
 
 ## 7. Semantic view and search service
 
@@ -160,3 +160,28 @@ Precomputed tables mean page loads do no joins and no AI. Only `analyst` and `sa
 | Labelled routing set (at least 25 prompts, every route, tricky cases) | `tests/routing/` |
 | Golden set (at least 15 questions with expected citations, S1 to S5, prescribing prompt, cross-patient prompt, conflict pair) | `tests/golden/` |
 | Access check (S3 denied by UI route, API and Copilot, identical responses) | `tests/access_check` |
+
+## 9. Agentic layer (tool registry, planner, composer)
+
+```
+question + screen + open patient + last two questions + topics of the previous answer
+   -> rule guards (cross-patient, edit or delete, prescribing)   decided by code, no model
+   -> PLANNER   llama3.1-8b (1 to 3 s); llama3.3-70b only when its plan is unusable (6 to 9 s)
+   -> TOOLS     read tools in a closed registry, run side by side as the caller; each returns cited evidence
+   -> COMPOSER  claude-sonnet-4-6 writes statements over the merged evidence; the validator drops what it does not back
+   -> answer + Why? evidence + audit (steps, planner model, tools chosen, timings)
+```
+
+| Part | Where | Notes |
+| --- | --- | --- |
+| Tool registry | `features/copilot/tools/` | read tools only: patient record, changes, structured query, label search, live label, attention, gaps, report reader, safety review, panel tools |
+| Agent plan check | `features/copilot/agent_plan.py` | closed tool list and argument models; an unknown tool or bad argument is refused |
+| Composition | `features/copilot/tools/compose.py` | tools run in parallel (`Run.fork`), evidence ids renumbered, model failure falls back to the tools' own statements |
+| Write proposals | `features/copilot/proposals.py`, `approvals.py`, `proposal_ports.py` | a preview first; only the Approve click writes, through the manual screen's service |
+| Intelligence rules | `core/intel/` | attention, changes, gaps: fixed rules shared by the Brief screen and the assistant |
+| Memory | `last_answer_id` on `POST /copilot/ask` | drug and lab names of the previous answer, from a closed vocabulary, never free text |
+| Live label | `core/openfda.py` | one fixed host, strict name pattern, no redirects, marked live and never stored as the snapshot |
+| Observability | audit `STEPS`, `GET /audit/summary`, Activity page card | volume, routes, planner and answer models, tools, median and 95th percentile wait, slowest steps |
+| Caching | in process | the written brief summary (20 minutes, keyed by patient and the rule signals) and the entitled-patient list (30 s). Nothing else is cached; derived intelligence is recomputed from the read models |
+
+Rules that do not move: tools retrieve and the model only reasons over what they returned; evidence ids exist only because a tool returned them; a denied patient is a plain 404; text read from a note, report or label is data, never an instruction.

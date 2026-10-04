@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-04T00:43:21+00:00",
- "passed": 2,
- "total": 2,
+ "generated": "2026-10-04T10:16:49+00:00",
+ "passed": 3,
+ "total": 3,
  "results": [
   {
    "id": "G04",
@@ -19,26 +19,45 @@
     "statements": 3,
     "short_answer": "Rahul Patel has 3 active medicines on record.",
     "error": null,
-    "latency_s": 3.94
+    "latency_s": 3.49
    }
   },
   {
-   "id": "G11",
-   "group": "refusal",
-   "question": "What should I prescribe for this patient?",
+   "id": "G05",
+   "group": "structured",
+   "question": "What changed since the last visit?",
    "patient": "P-1042",
    "as": "sharma",
    "pass": true,
    "why": [],
    "summary": {
-    "route": "refuse",
-    "model": null,
-    "cost_note": "rule guard, no model call",
-    "kind": null,
-    "statements": 0,
-    "short_answer": "I can't recommend, start, stop or dose a medicine, or make a diagnosis. That is the clinician's decision. What I can do is show documented considerations from the indexed sources for you to review.",
+    "route": "analyst",
+    "model": "llama3.1-8b",
+    "cost_note": "Cortex Analyst",
+    "kind": "CHANGED",
+    "statements": 8,
+    "short_answer": "8 changes since the previous visit on 14 Aug 2026.",
     "error": null,
-    "latency_s": 2.03
+    "latency_s": 3.11
+   }
+  },
+  {
+   "id": "G06",
+   "group": "structured",
+   "question": "How many outpatient visits did this patient have in the last 12 months?",
+   "patient": "P-1042",
+   "as": "sharma",
+   "pass": true,
+   "why": [],
+   "summary": {
+    "route": "analyst",
+    "model": "llama3.1-8b",
+    "cost_note": "Cortex Analyst",
+    "kind": "UTIL",
+    "statements": 1,
+    "short_answer": "Rahul Patel has 1 utilisation figures on record.",
+    "error": null,
+    "latency_s": 3.74
    }
   }
  ]

@@ -16,6 +16,11 @@ class AskRequest(Strict):
     question: str = Field(min_length=1, max_length=2000)
     screen: Screen
     patient_id: str | None = Field(default=None, max_length=20)
+    last_answer_id: str | None = Field(
+        default=None,
+        max_length=40,
+        description="The previous answer in this conversation. Its drug and lab names (a closed vocabulary, never free text) help the planner resolve words like 'that medicine'.",
+    )
     history: list[str] = Field(
         default_factory=list, max_length=2, description="The last two user questions (text only)."
     )
@@ -36,11 +41,27 @@ class ActionResponse(BaseModel):
     audit_id: str | None
 
 
+class ProposalResult(BaseModel):
+    """An approved proposal: where the new record is."""
+
+    proposal_id: str
+    patient_id: str
+    record_id: str | None = None
+    tab: str = "overview"
+    status: Literal["approved"] = "approved"
+
+
+class ProposalDiscarded(BaseModel):
+    proposal_id: str
+    status: Literal["discarded"] = "discarded"
+
+
 class AskResult(BaseModel):
     """JSON mode (Accept: application/json): the final outcome of a request that would otherwise stream."""
 
     routes: list[dict[str, Any]]
     actions: list[dict[str, Any]]
+    proposals: list[dict[str, Any]] = Field(default_factory=list)
     answer: dict[str, Any] | None
     refusal: dict[str, Any] | None
     steps: list[dict[str, Any]]

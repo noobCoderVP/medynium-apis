@@ -1,6 +1,6 @@
 # Medynium documentation
 
-Status: **Architecture, data and API documentation drafted for review.** No development beyond the scaffold has started. Source documents: `Medynium_BRD.md`, `Medynium_SRS.md`, `Medynium_Implementation_Plan.md` (in the project folder), plus the decisions recorded here.
+Architecture, data, API and quality documentation for the Medynium backend. Source documents: [BRD](requirements/Medynium_BRD.md), [SRS](requirements/Medynium_SRS.md) and [implementation plan](requirements/Medynium_Implementation_Plan.md), plus the decisions recorded here.
 
 ## Read in this order
 
@@ -12,7 +12,7 @@ Status: **Architecture, data and API documentation drafted for review.** No deve
 6. [API reference](api/README.md): conventions, errors, SSE, then each endpoint group
 7. [External dependencies](external-dependencies.md): accounts, keys and decisions needed from outside the code
 
-## Reviewing this draft
+## Status markers
 
 Each document marks items as **Accepted**, **Proposed** or **To validate**. The ones that need your answer are in [decisions.md](architecture/decisions.md#open-questions). The one that can change the design is **ADR-003** (a Snowflake role per app user), which is settled by the Slice 2 spike, not by discussion.
 

@@ -133,8 +133,8 @@ Runtime roles can insert but not update or delete either table. The caller sees 
 
 | Secret | Where | Rotation |
 | --- | --- | --- |
-| `MED_API` private key | Render secret (`SNOWFLAKE_API_PRIVATE_KEY_B64`) | Replace the key pair, update the secret, redeploy |
-| `SESSION_SECRET` | Render secret (generated) | Rotating signs everyone out |
+| `MED_API` private key | Secret Manager secret (`SNOWFLAKE_API_PRIVATE_KEY_B64`) | Replace the key pair, update the secret, redeploy |
+| `SESSION_SECRET` | Secret Manager secret (generated) | Rotating signs everyone out |
 | Admin setup key or token | Your machine only, never deployed | Revoke after bootstrap |
 | User passwords | Never stored; argon2id hash only | User or admin reset |
 

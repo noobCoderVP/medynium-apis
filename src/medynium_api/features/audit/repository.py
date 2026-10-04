@@ -49,3 +49,13 @@ class AuditRepository:
                 [*params, limit, offset],
             )
         return rows, int(rows[0]["total"]) if rows else 0
+
+    def recent(self, role: str, days: int) -> list[Row]:
+        """The caller's own audit rows from the last `days` days, newest first (at most 2000)."""
+        with user_cursor(role) as cur:
+            return fetch_all(
+                cur,
+                "SELECT ACTION, ROUTE, MODEL, STEPS, OUTCOME FROM ANALYTICS.COPILOT_AUDIT "
+                "WHERE OCCURRED_AT >= DATEADD(day, -%s, SYSDATE()) ORDER BY OCCURRED_AT DESC LIMIT 2000",
+                (days,),
+            )

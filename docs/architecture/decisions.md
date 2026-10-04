@@ -37,7 +37,7 @@ No managed identity provider. Admins invite users and assign patients. MFA is ou
 - **Risk:** SSE through the proxy must be verified early (R-3). Fallback: custom domain, direct calls with CORS and a parent-domain cookie.
 
 ### ADR-007: Hosting on Google Cloud Run (API and UI), asia-south1. Accepted (revised from Render and Vercel)
-Both services on Cloud Run with minimum one instance, so the `/api` proxy and SSE run inside GCP and there is no cold start in a live demo. Snowpark Container Services is not used. `render.yaml` is retired when the GCP deployment lands (Stage 8). Needs a GCP project from you.
+Both services on Cloud Run with minimum one instance, so the `/api` proxy and SSE run inside GCP and there is no cold start in a live demo. Snowpark Container Services is not used. `render.yaml` has been removed.
 
 ### ADR-008: Precompute analytics at load time. Accepted
 `PATIENT_360`, `PATIENT_TIMELINE`, `UTILIZATION`, `CURRENT_MEDICATIONS` and `DASHBOARD_WORKLIST` are built by scripted `CREATE TABLE AS` at load, not dynamic tables.
@@ -61,7 +61,7 @@ Inserted before the response completes so a crash cannot lose them. **Amended 20
 - **Cost:** roughly one extra Snowflake round trip per audited request.
 
 ### ADR-014: UI on Cloud Run with the `/api` rewrite kept. Accepted
-Same-origin cookies; SSE runs server to server inside GCP. See build-plan/08.
+Same-origin cookies; SSE runs server to server inside GCP.
 
 ### ADR-015: Safety route is an evidence-pack path by default; Cortex Agent behind a setting. Accepted
 Spike S-B measured about 15 s for a trivial agent run, too slow for the 20 s target. Default: deterministic SQL under the user's role, Cortex Search, one strong-model `COMPLETE` call with compact structured output, then the validator. The Cortex Agent path (`SAFETY_PATH=agent`) stays available and is built after the default is green. See [spikes.md](spikes.md).

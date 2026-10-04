@@ -9,9 +9,9 @@ from medynium_api.features.copilot.handlers import Ctx
 from medynium_api.features.copilot.pack import focus_terms
 
 MESSAGES = {
-    "prescribing": (
-        "I can't recommend, start, stop or dose a medicine, or make a diagnosis. That is the clinician's decision. "
-        "What I can do is show documented considerations from the indexed sources for you to review."
+    "diagnosis": (
+        "I can't make a diagnosis. That is the clinician's decision. I can show what the labels document about a "
+        "medicine, options for a condition, or documented considerations for this patient's medicines."
     ),
     "cross_patient": (
         "I can answer about the patient you have open, or about your own patients as a group: who needs attention, "
@@ -19,9 +19,10 @@ MESSAGES = {
         "whole system. Rephrase it about your own patients, or open a patient and ask."
     ),
     "record_change": (
-        "I can't change the clinical record. I can open a patient, show a timeline or lab trend, run the safety review, "
-        "or pin evidence."
+        "I can't edit or delete existing records. I can prepare a new note, allergy, diagnosis or medicine for your "
+        "approval, open a patient, show a timeline, run the safety review, or pin evidence."
     ),
+    "needs_doctor": "Only a doctor can add to the clinical record. I can still answer questions about this patient.",
     "unlisted_action": (
         "That isn't something I can do. I can open a patient, show a timeline or lab trend, run the safety review, "
         "or pin evidence."
@@ -50,13 +51,13 @@ def considerations_for(ctx: Ctx) -> list[dict[str, Any]]:
     ]  # fmt: skip
 
 
-def run_refuse(ctx: Ctx, run: Run, reason: str) -> None:
+def run_refuse(ctx: Ctx, run: Run, reason: str, message: str | None = None) -> None:
     with run.step("Checking what I can help with"):
-        extra = considerations_for(ctx) if reason == "prescribing" else []
+        extra = considerations_for(ctx) if reason == "diagnosis" else []
     run.emit(
         "refusal",
         {
-            "message": MESSAGES.get(reason, MESSAGES["unlisted_action"]),
+            "message": message or MESSAGES.get(reason, MESSAGES["unlisted_action"]),
             "reason": reason,
             "considerations": extra,
         },

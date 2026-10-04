@@ -16,6 +16,12 @@ SECTIONS = [
     ("use_in_specific_populations", "Use in specific populations"),
     ("drug_interactions", "Drug interactions"),
 ]
+# Sections added after the first load (add_sections.py): what a drug is for, and its common adverse reactions. They are
+# kept apart from SECTIONS so the chunk ids and the per-drug cap of the original corpus do not move.
+NEW_SECTIONS = [
+    ("indications_and_usage", "Indications and usage"),
+    ("adverse_reactions", "Adverse reactions"),
+]
 # An over-the-counter label is a "Drug Facts" panel with different section names. Used only for drugs marked `otc` in the
 # catalog, so the prescription chunks of the first 25 drugs (and the ids derived from them) are untouched.
 OTC_SECTIONS = [
@@ -62,10 +68,12 @@ def split_sentences(text: str, target: int = TARGET) -> list[str]:
     return chunks
 
 
-def label_chunks(record: dict, otc: bool = False) -> list[dict]:
+def label_chunks(
+    record: dict, otc: bool = False, sections: list[tuple[str, str]] | None = None
+) -> list[dict]:
     """Ordered chunks for one label: {section_key, section_name, index, text}."""
     out: list[dict] = []
-    for key, name in OTC_SECTIONS if otc else SECTIONS:
+    for key, name in sections or (OTC_SECTIONS if otc else SECTIONS):
         values = record.get(key)
         if not values:
             continue

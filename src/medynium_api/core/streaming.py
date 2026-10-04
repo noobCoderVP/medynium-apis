@@ -5,6 +5,7 @@ performs it, with its real duration, so the steps shown to the user equal the st
 (FR-21, AI-12). Nothing here fabricates progress.
 """
 
+import copy
 import json
 import queue
 import threading
@@ -35,19 +36,32 @@ class Run:
         self.events: list[tuple[str, dict[str, Any]]] = []
         self.steps: list[dict[str, Any]] = []
         self.audit_id: str | None = None
+        # When set, `finalize` hands its result here instead of storing and announcing it (agent composition).
+        self.collector: list[Any] | None = None
         self._sink = sink
+        self._lock = (
+            threading.RLock()
+        )  # tools may run side by side; steps and events stay consistent
 
     def emit(self, event: str, data: dict[str, Any]) -> None:
-        self.events.append((event, data))
-        if self._sink is not None:
-            self._sink.put((event, data))
+        with self._lock:
+            self.events.append((event, data))
+            if self._sink is not None:
+                self._sink.put((event, data))
+
+    def fork(self) -> "Run":
+        """A view of this run for one parallel tool: same steps, events and sink, its own collector."""
+        child = copy.copy(self)
+        child.collector = []
+        return child
 
     @contextmanager
     def step(self, label: str) -> Iterator[StepHandle]:
-        step_id = f"s{len(self.steps) + 1}"
-        record: dict[str, Any] = {"step_id": step_id, "label": label, "status": "running"}
-        self.steps.append(record)
-        self.emit("step", dict(record))
+        with self._lock:
+            step_id = f"s{len(self.steps) + 1}"
+            record: dict[str, Any] = {"step_id": step_id, "label": label, "status": "running"}
+            self.steps.append(record)
+            self.emit("step", dict(record))
         handle = StepHandle()
         started = time.perf_counter()
         try:
