@@ -1,0 +1,56 @@
+# Retrieval queries for the Phase 4 drugs (production plan). Same format as retrieval_set.yaml, read after it.
+# Positives name a well-known label topic for the drug. Negatives are common Indian drugs with no US label: the right answer is
+# an honest gap, never a nearby drug's text.
+queries:
+  # Section lookups ------------------------------------------------------------------------------------
+  - {kind: section, q: sitagliptin pancreatitis, drug: Sitagliptin}
+  - {kind: section, q: empagliflozin ketoacidosis, drug: Empagliflozin}
+  - {kind: section, q: dapagliflozin volume depletion hypotension, drug: Dapagliflozin}
+  - {kind: section, q: pioglitazone congestive heart failure, drug: Pioglitazone hydrochloride}
+  - {kind: section, q: olmesartan fetal toxicity pregnancy, drug: Olmesartan medoxomil}
+  - {kind: section, q: ramipril angioedema, drug: Ramipril}
+  - {kind: section, q: enalapril fetal toxicity, drug: Enalapril maleate}
+  - {kind: section, q: atenolol abrupt cessation ischemic heart disease, drug: Atenolol}
+  - {kind: section, q: bisoprolol bradycardia heart block, drug: Bisoprolol fumarate}
+  - {kind: section, q: chlorthalidone electrolyte imbalance, drug: Chlorthalidone}
+  - {kind: section, q: aspirin Reye's syndrome children, drug: Aspirin}
+  - {kind: section, q: ticagrelor bleeding risk, drug: Ticagrelor}
+  - {kind: section, q: ondansetron QT prolongation, drug: Ondansetron}
+  - {kind: section, q: acetaminophen liver damage, drug: Paracetamol (acetaminophen)}
+  - {kind: section, q: ibuprofen stomach bleeding and heart attack risk, drug: Ibuprofen}
+  - {kind: section, q: diclofenac cardiovascular thrombotic events, drug: Diclofenac}
+  - {kind: section, q: amoxicillin penicillin allergy anaphylaxis, drug: Amoxicillin}
+  - {kind: section, q: amoxicillin clavulanate cholestatic jaundice liver, drug: Amoxicillin and clavulanate potassium}
+  - {kind: section, q: azithromycin QT prolongation, drug: Azithromycin}
+  - {kind: section, q: cefixime Clostridioides difficile diarrhea, drug: Cefixime}
+  - {kind: section, q: doxycycline tooth discoloration pregnancy, drug: Doxycycline hyclate}
+  - {kind: section, q: metronidazole carcinogenic in rodents, drug: Metronidazole}
+  - {kind: section, q: ceftriaxone calcium-containing solutions neonates, drug: Ceftriaxone sodium}
+  - {kind: section, q: cetirizine drowsiness, drug: Cetirizine hydrochloride}
+  - {kind: section, q: montelukast neuropsychiatric events, drug: Montelukast sodium}
+  - {kind: section, q: rifampin drug interactions, drug: Rifampin (rifampicin)}
+  - {kind: section, q: isoniazid hepatitis, drug: Isoniazid}
+  - {kind: section, q: ethambutol optic neuritis visual acuity, drug: Ethambutol hydrochloride}
+  - {kind: section, q: levetiracetam behavioral abnormalities psychotic symptoms, drug: Levetiracetam}
+  - {kind: section, q: divalproex hepatotoxicity pancreatitis fetal risk, drug: Divalproex sodium (valproate)}
+  - {kind: section, q: escitalopram suicidal thoughts, drug: Escitalopram oxalate}
+  - {kind: section, q: sertraline serotonin syndrome, drug: Sertraline hydrochloride}
+  - {kind: section, q: gabapentin respiratory depression, drug: Gabapentin}
+  - {kind: section, q: prednisolone adrenal suppression, drug: Prednisolone}
+  - {kind: section, q: methotrexate embryo-fetal toxicity, drug: Methotrexate}
+  - {kind: section, q: alprazolam concomitant opioids, drug: Alprazolam}
+  - {kind: section, q: amitriptyline suicidality antidepressants, drug: Amitriptyline hydrochloride}
+  # Indian brands (curated by hand, for clinical review) -------------------------------------------------
+  - {kind: brand, q: Augmentin, drug: Amoxicillin and clavulanate potassium}
+  - {kind: brand, q: Crocin, drug: Paracetamol (acetaminophen)}
+  - {kind: brand, q: Dolo, drug: Paracetamol (acetaminophen)}
+  - {kind: brand, q: Ecosprin, drug: Aspirin}
+  - {kind: brand, q: Jardiance, drug: Empagliflozin}
+  - {kind: brand, q: Azithral, drug: Azithromycin}
+  - {kind: brand, q: Keppra, drug: Levetiracetam}
+  # Negatives: common in India, no US label -------------------------------------------------------------
+  - {kind: negative, q: teneligliptin dosing}
+  - {kind: negative, q: gliclazide hypoglycemia}
+  - {kind: negative, q: domperidone QT prolongation}
+  - {kind: negative, q: aceclofenac gastrointestinal bleeding}
+  - {kind: negative, q: cilnidipine blood pressure}

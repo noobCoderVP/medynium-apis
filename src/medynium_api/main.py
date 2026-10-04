@@ -8,6 +8,7 @@ from medynium_api import __version__
 from medynium_api.core.config import get_settings
 from medynium_api.core.errors import ErrorBody, register_error_handlers
 from medynium_api.core.logging import configure_logging
+from medynium_api.core.refresh import refresh_worker
 from medynium_api.core.request_context import RequestContextMiddleware
 from medynium_api.core.security.csrf import CsrfMiddleware
 from medynium_api.core.snowflake.connection import get_pool
@@ -19,6 +20,7 @@ from medynium_api.wiring import build_ports
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
     yield
+    refresh_worker.stop()
     get_pool().close_all()
 
 

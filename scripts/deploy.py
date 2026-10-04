@@ -353,6 +353,7 @@ def _service_flags(runtime_sa: str) -> list[str]:
         "3",
         "--timeout",
         "300",
+        "--no-cpu-throttling",  # the read-model refresh runs after the response is sent (core/refresh.py)
         "--allow-unauthenticated",  # the app enforces auth itself
     ]
 

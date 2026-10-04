@@ -1,0 +1,62 @@
+# Phase 4 of the production plan: the drugs prescribed most in India. Read after drugs.yaml, so the first 25 keep their ids.
+#
+# Selection rule: on India's National List of Essential Medicines (NLEM 2022) or among the most-prescribed brands, AND a
+# US label exists on openFDA. A reviewer should confirm this list; it is a proposal, not a ranking by prescribing volume.
+#   nlem      set only where the drug is certain to be on NLEM 2022. Verify against the NLEM PDF before relying on it.
+#   otc       has a Drug Facts label (different sections from a prescription label).
+#   brands    well-known Indian brand names added by hand (source MANUAL, for clinical review). The A-Z India dataset that fed
+#             the first 100 brands is not in this repository, so these are not generated from it.
+#   no_label  common in India but with no US prescription label. It is listed so a search says "not indexed" and a medicine
+#             on the patient's list shows the same honest gap, instead of a guess. Indian prescribing information from a
+#             manufacturer or CDSCO would be the source to add (needs approval).
+# openFDA is a US source: every citation says so, and Indian labelling may differ.
+drugs:
+  - {code: GLZ, name: Gliclazide, openfda: [GLICLAZIDE], aliases: [gliclazide], nlem: true, brands: [diamicron, glizid, reclide], no_label: true}
+  - {code: SIT, name: Sitagliptin, openfda: [SITAGLIPTIN, SITAGLIPTIN PHOSPHATE], aliases: [sitagliptin], brands: [januvia, istavel, zita]}
+  - {code: PIO, name: Pioglitazone hydrochloride, openfda: [PIOGLITAZONE HYDROCHLORIDE, PIOGLITAZONE], aliases: [pioglitazone, pioglitazone hydrochloride], brands: [pioz, piozone]}
+  - {code: EMP, name: Empagliflozin, openfda: [EMPAGLIFLOZIN], aliases: [empagliflozin], brands: [jardiance]}
+  - {code: DAP, name: Dapagliflozin, openfda: [DAPAGLIFLOZIN, DAPAGLIFLOZIN PROPANEDIOL], aliases: [dapagliflozin], brands: [forxiga, oxra]}
+  - {code: VIL, name: Vildagliptin, openfda: [VILDAGLIPTIN], aliases: [vildagliptin], brands: [galvus], no_label: true}
+  - {code: TNG, name: Teneligliptin, openfda: [TENELIGLIPTIN], aliases: [teneligliptin], no_label: true}
+  - {code: OLM, name: Olmesartan medoxomil, openfda: [OLMESARTAN MEDOXOMIL], aliases: [olmesartan, olmesartan medoxomil], brands: [olmezest, olmesar]}
+  - {code: RAM, name: Ramipril, openfda: [RAMIPRIL], aliases: [ramipril], nlem: true, brands: [cardace, ramace, tritace]}
+  - {code: ENA, name: Enalapril maleate, openfda: [ENALAPRIL MALEATE], aliases: [enalapril, enalapril maleate], nlem: true, brands: [envas, enam]}
+  - {code: ATE, name: Atenolol, openfda: [ATENOLOL], aliases: [atenolol], nlem: true, brands: [tenormin, aten]}
+  - {code: BIS, name: Bisoprolol fumarate, openfda: [BISOPROLOL FUMARATE], aliases: [bisoprolol, bisoprolol fumarate], brands: [concor, bisoheart]}
+  - {code: CHL, name: Chlorthalidone, openfda: [CHLORTHALIDONE], aliases: [chlorthalidone]}
+  - {code: CIL, name: Cilnidipine, openfda: [CILNIDIPINE], aliases: [cilnidipine], brands: [cilacar, cilaheart], no_label: true}
+  - {code: ASP, name: Aspirin, openfda: [ASPIRIN], aliases: [aspirin, acetylsalicylic acid], nlem: true, brands: [ecosprin, loprin, disprin], otc: true}
+  - {code: TIC, name: Ticagrelor, openfda: [TICAGRELOR], aliases: [ticagrelor], brands: [brilinta]}
+  - {code: RAB, name: Rabeprazole sodium, openfda: [RABEPRAZOLE SODIUM], aliases: [rabeprazole, rabeprazole sodium], brands: [razo, rabium]}
+  - {code: ESO, name: Esomeprazole magnesium, openfda: [ESOMEPRAZOLE MAGNESIUM, ESOMEPRAZOLE], aliases: [esomeprazole, esomeprazole magnesium], brands: [nexium, raciper]}
+  - {code: OND, name: Ondansetron, openfda: [ONDANSETRON, ONDANSETRON HYDROCHLORIDE], aliases: [ondansetron, ondansetron hydrochloride], nlem: true, brands: [zofer, emeset]}
+  - {code: DOM, name: Domperidone, openfda: [DOMPERIDONE], aliases: [domperidone], brands: [domstal, vomistop], no_label: true}
+  - {code: PCM, name: Paracetamol (acetaminophen), openfda: [ACETAMINOPHEN], aliases: [paracetamol, acetaminophen], nlem: true, brands: [crocin, dolo, calpol], otc: true}
+  - {code: IBU, name: Ibuprofen, openfda: [IBUPROFEN], aliases: [ibuprofen], nlem: true, brands: [brufen, ibugesic], otc: true}
+  - {code: DIC, name: Diclofenac, openfda: [DICLOFENAC SODIUM, DICLOFENAC POTASSIUM, DICLOFENAC], aliases: [diclofenac, diclofenac sodium], nlem: true, brands: [voveran, voltaren]}
+  - {code: ACE, name: Aceclofenac, openfda: [ACECLOFENAC], aliases: [aceclofenac], brands: [zerodol, hifenac], no_label: true}
+  - {code: AMX, name: Amoxicillin, openfda: [AMOXICILLIN], aliases: [amoxicillin], nlem: true, brands: [mox, novamox]}
+  - {code: AMC, name: Amoxicillin and clavulanate potassium, openfda: [AMOXICILLIN AND CLAVULANATE POTASSIUM], aliases: [amoxicillin and clavulanate potassium, amoxicillin clavulanate, amoxicillin and clavulanate], nlem: true, brands: [augmentin, clavam]}
+  - {code: AZI, name: Azithromycin, openfda: [AZITHROMYCIN, AZITHROMYCIN DIHYDRATE], aliases: [azithromycin], nlem: true, brands: [azithral, zithromax]}
+  - {code: CEF, name: Cefixime, openfda: [CEFIXIME], aliases: [cefixime], nlem: true, brands: [zifi, taxim-o]}
+  - {code: DOX, name: Doxycycline hyclate, openfda: [DOXYCYCLINE HYCLATE, DOXYCYCLINE], aliases: [doxycycline, doxycycline hyclate], nlem: true, brands: [doxt-sl, vibramycin]}
+  - {code: MTZ, name: Metronidazole, openfda: [METRONIDAZOLE], aliases: [metronidazole], nlem: true, brands: [flagyl, metrogyl]}
+  - {code: CTX, name: Ceftriaxone sodium, openfda: [CEFTRIAXONE SODIUM, CEFTRIAXONE], aliases: [ceftriaxone, ceftriaxone sodium], nlem: true, brands: [monocef, oframax]}
+  - {code: CET, name: Cetirizine hydrochloride, openfda: [CETIRIZINE HYDROCHLORIDE], aliases: [cetirizine, cetirizine hydrochloride], nlem: true, brands: [cetzine, okacet], otc: true}
+  - {code: LCZ, name: Levocetirizine dihydrochloride, openfda: [LEVOCETIRIZINE DIHYDROCHLORIDE], aliases: [levocetirizine, levocetirizine dihydrochloride], brands: [levocet, xyzal]}
+  - {code: MON, name: Montelukast sodium, openfda: [MONTELUKAST SODIUM], aliases: [montelukast, montelukast sodium], brands: [montair, singulair]}
+  - {code: RIF, name: Rifampin (rifampicin), openfda: [RIFAMPIN], aliases: [rifampin, rifampicin], nlem: true, brands: [rimactane, r-cin]}
+  - {code: INH, name: Isoniazid, openfda: [ISONIAZID], aliases: [isoniazid], nlem: true}
+  - {code: PZA, name: Pyrazinamide, openfda: [PYRAZINAMIDE], aliases: [pyrazinamide], nlem: true}
+  - {code: EMB, name: Ethambutol hydrochloride, openfda: [ETHAMBUTOL HYDROCHLORIDE], aliases: [ethambutol, ethambutol hydrochloride], nlem: true, brands: [myambutol, combutol]}
+  - {code: LVT, name: Levetiracetam, openfda: [LEVETIRACETAM], aliases: [levetiracetam], nlem: true, brands: [levipil, keppra]}
+  - {code: VAL, name: Divalproex sodium (valproate), openfda: [DIVALPROEX SODIUM, VALPROIC ACID, VALPROATE SODIUM], aliases: [divalproex, divalproex sodium, valproate, valproic acid, sodium valproate], nlem: true, brands: [valparin, depakote]}
+  - {code: ESC, name: Escitalopram oxalate, openfda: [ESCITALOPRAM OXALATE, ESCITALOPRAM], aliases: [escitalopram, escitalopram oxalate], brands: [nexito, lexapro]}
+  - {code: SER, name: Sertraline hydrochloride, openfda: [SERTRALINE HYDROCHLORIDE], aliases: [sertraline, sertraline hydrochloride], brands: [serta, zoloft]}
+  - {code: GAB, name: Gabapentin, openfda: [GABAPENTIN], aliases: [gabapentin], brands: [gabapin, neurontin]}
+  - {code: PRE, name: Prednisolone, openfda: [PREDNISOLONE], aliases: [prednisolone], nlem: true, brands: [wysolone, omnacortil]}
+  - {code: MFT, name: Methotrexate, openfda: [METHOTREXATE, METHOTREXATE SODIUM], aliases: [methotrexate], nlem: true, brands: [folitrax]}
+  - {code: FOL, name: Folic acid, openfda: [FOLIC ACID], aliases: [folic acid], nlem: true, brands: [folvite], otc: true}
+  - {code: CAL, name: Calcium carbonate, openfda: [CALCIUM CARBONATE], aliases: [calcium carbonate], brands: [shelcal, calcimax], otc: true}
+  - {code: ALP, name: Alprazolam, openfda: [ALPRAZOLAM], aliases: [alprazolam], brands: [alprax, restyl]}
+  - {code: AMT, name: Amitriptyline hydrochloride, openfda: [AMITRIPTYLINE HYDROCHLORIDE], aliases: [amitriptyline, amitriptyline hydrochloride], nlem: true, brands: [tryptomer, amitone]}

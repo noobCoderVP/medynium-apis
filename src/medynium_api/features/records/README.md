@@ -1,0 +1,9 @@
+# records
+
+**Purpose:** The write path. A doctor registers patients and adds, edits, archives and restores diagnoses, medications, allergies, lab results, notes and visits. Every change is checked twice for entitlement (the API, then inside Snowflake), is versioned, is written to an insert-only history table and rebuilds that patient's read models before returning, so the worklist, timeline and assistant show it at once. The assistant never writes: nothing in `copilot` imports this feature.
+**Endpoints:** POST /patients; PUT /patients/{id}; POST /patients/{id}/archive and /restore; GET /archived-patients; POST and PUT /patients/{id}/{diagnoses|medications|allergies|labs|notes|visits}[/{record_id}]; POST /patients/{id}/{kind}/{record_id}/archive and /restore; GET /patients/{id}/records/{kind}[/{record_id}]; GET /patients/{id}/history
+**Requirements:** production plan Phase 1 (P1.0 to P1.8); SEC-02, SEC-03, SEC-05, SEC-06; ADR-014
+**Rules:** doctors only (an assistant gets 403). A denied patient is audited and answered exactly like a missing one (404, padded latency). An edit carries the `version` last read; a stale one is 409. `Idempotency-Key` makes a repeated request return the first result. Claims and procedures stay read-only. Archive is a flag, never a delete.
+**How it writes:** `repository.py` only CALLs `INTAKE.REGISTER_PATIENT` and `INTAKE.WRITE_RECORD` (snowflake/36_intake_procedures.sql) as the service role with the verified actor id. The procedures are owned by `MED_CLINICAL_WRITER`; `MED_DOCTOR`, `MED_ASSISTANT` and every `U_` role stay read-only. `INVOKER_ROLE()` cannot identify the caller inside an owner's-rights procedure (spike S-E), so the actor id is passed in and re-checked against `PATIENT_ENTITLEMENT`.
+**May import:** `core/` only, never another feature.
+**Status:** built; live tests in `tests/integration/test_records.py`.

@@ -87,6 +87,10 @@ class Executor:
             raise invalid("The action parameters are not valid.", [{"field": ".".join(map(str, e["loc"])), "problem": e["msg"]} for e in exc.errors()]) from exc  # fmt: skip
         data = parsed.model_dump(by_alias=True)
         patient_id = data.get("patient_id") or context_patient
+        if via == "AGENT" and context_patient and action != "open_patient":
+            # Text the model read (a note, a pasted line) may name another patient. With a patient open, an
+            # agent-planned action stays on that patient; moving elsewhere is the user's own click.
+            patient_id = context_patient
         label = {"open_patient": "Opening the patient", "show_timeline": "Preparing the timeline view", "run_safety_review": "Running the safety review", "pin_evidence": "Pinning the evidence"}[action]  # fmt: skip
         result: dict[str, Any]
         with run.step(label) as step:
@@ -112,11 +116,14 @@ class Executor:
                     session, patient_id, run, question=question or "Run safety review"
                 )
                 result = {"answer_id": answer.answer_id, "patient_id": patient_id}
+        shown = {k: v for k, v in data.items() if v is not None}
+        if "patient_id" in shown:
+            shown["patient_id"] = patient_id
         run.emit(
             "action",
             {
                 "action": action,
-                "params": {k: v for k, v in data.items() if v is not None},
+                "params": shown,
                 "status": "done",
                 "result": result,
             },

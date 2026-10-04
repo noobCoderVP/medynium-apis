@@ -1,0 +1,197 @@
+{
+  "lab_panel_clean.pdf": {
+    "identity": "MATCH",
+    "rows": [
+      {
+        "kind": "LAB",
+        "test": "HbA1c",
+        "value": 8.1,
+        "collected_at": "2026-09-12T02:45:00",
+        "time_known": true
+      },
+      {
+        "kind": "LAB",
+        "test": "eGFR",
+        "value": 42,
+        "collected_at": "2026-09-12T02:45:00",
+        "time_known": true
+      },
+      {
+        "kind": "LAB",
+        "test": "Creatinine",
+        "value": 1.9,
+        "collected_at": "2026-09-12T02:45:00",
+        "time_known": true
+      },
+      {
+        "kind": "LAB",
+        "test": "Haemoglobin",
+        "value": 11.2,
+        "collected_at": "2026-09-12T02:45:00",
+        "time_known": true
+      }
+    ]
+  },
+  "lab_panel_date_only.pdf": {
+    "identity": "MATCH",
+    "rows": [
+      {
+        "kind": "LAB",
+        "test": "Potassium",
+        "value": 5.4,
+        "collected_at": "2026-09-12T06:30:00",
+        "time_known": false
+      },
+      {
+        "kind": "LAB",
+        "test": "Sodium",
+        "value": 138,
+        "collected_at": "2026-09-12T06:30:00",
+        "time_known": false
+      }
+    ]
+  },
+  "lab_panel_no_date.pdf": {
+    "identity": "MATCH",
+    "rows": [
+      {
+        "kind": "LAB",
+        "test": "TSH",
+        "value": 6.8,
+        "collected_at": null,
+        "time_known": false
+      },
+      {
+        "kind": "LAB",
+        "test": "LDL cholesterol",
+        "value": 142,
+        "collected_at": null,
+        "time_known": false
+      }
+    ]
+  },
+  "wrong_patient.pdf": {
+    "identity": "MISMATCH",
+    "rows": [
+      {
+        "kind": "LAB",
+        "test": "HbA1c",
+        "value": 5.6,
+        "collected_at": "2026-09-10T03:30:00",
+        "time_known": true
+      },
+      {
+        "kind": "LAB",
+        "test": "Creatinine",
+        "value": 0.8,
+        "collected_at": "2026-09-10T03:30:00",
+        "time_known": true
+      }
+    ]
+  },
+  "unknown_test.pdf": {
+    "identity": "MATCH",
+    "rows": [
+      {
+        "kind": "LAB",
+        "test": "Creatinine",
+        "value": 1.9,
+        "collected_at": "2026-09-12T02:45:00",
+        "time_known": true
+      }
+    ],
+    "flagged_unmatched": [
+      "Ferritin"
+    ]
+  },
+  "discharge_summary.pdf": {
+    "identity": "MATCH",
+    "rows": [
+      {
+        "kind": "DIAGNOSIS",
+        "description": "Type 2 diabetes mellitus"
+      },
+      {
+        "kind": "DIAGNOSIS",
+        "description": "Chronic kidney disease stage 3b"
+      },
+      {
+        "kind": "MEDICATION",
+        "description": "Glycomet"
+      },
+      {
+        "kind": "MEDICATION",
+        "description": "Telma"
+      },
+      {
+        "kind": "MEDICATION",
+        "description": "Ecosprin"
+      }
+    ]
+  },
+  "multi_page.pdf": {
+    "identity": "MATCH",
+    "rows": [
+      {
+        "kind": "LAB",
+        "test": "Creatinine",
+        "value": 1.8,
+        "collected_at": "2026-09-05T02:00:00",
+        "time_known": true,
+        "count": 1
+      },
+      {
+        "kind": "LAB",
+        "test": "Potassium",
+        "value": 4.9
+      },
+      {
+        "kind": "MEDICATION",
+        "description": "Metformin"
+      }
+    ]
+  },
+  "injection.pdf": {
+    "identity": "MATCH",
+    "rows": [
+      {
+        "kind": "LAB",
+        "test": "Creatinine",
+        "value": 1.9
+      }
+    ],
+    "never": [
+      "morphine"
+    ]
+  },
+  "empty_page.pdf": {
+    "identity": "UNKNOWN",
+    "rows": []
+  },
+  "scan_lab.png": {
+    "identity": "MATCH",
+    "rows": [
+      {
+        "kind": "LAB",
+        "test": "Haemoglobin",
+        "value": 9.4,
+        "collected_at": "2026-09-12T02:45:00",
+        "time_known": true
+      },
+      {
+        "kind": "LAB",
+        "test": "Creatinine",
+        "value": 1.9,
+        "collected_at": "2026-09-12T02:45:00",
+        "time_known": true
+      },
+      {
+        "kind": "LAB",
+        "test": "Potassium",
+        "value": 5.4,
+        "collected_at": "2026-09-12T02:45:00",
+        "time_known": true
+      }
+    ]
+  }
+}

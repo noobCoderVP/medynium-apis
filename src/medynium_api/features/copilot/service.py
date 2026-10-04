@@ -24,6 +24,7 @@ from medynium_api.features.copilot.handlers.analyst import run_analyst
 from medynium_api.features.copilot.handlers.knowledge import run_knowledge
 from medynium_api.features.copilot.handlers.lookup import CHANGED, classify, run_changed, run_lookup
 from medynium_api.features.copilot.handlers.refuse import run_refuse
+from medynium_api.features.copilot.panel import run_panel
 from medynium_api.features.copilot.ports import Ports
 from medynium_api.features.copilot.repository import CopilotQueries, CopilotRepository
 from medynium_api.features.copilot.routing import NEEDS_PATIENT, Decision, Step, decide
@@ -154,7 +155,7 @@ class CopilotService:
             )  # fmt: skip
 
     def _info(self, decision: Decision, step: Step) -> RouteInfo:
-        free = step.route in ("lookup", "action", "refuse", "knowledge")
+        free = step.route in ("lookup", "action", "refuse", "knowledge", "panel")
         if decision.model is None:
             note = "rule guard, no model call"
         elif free:
@@ -176,6 +177,16 @@ class CopilotService:
         route = ctx.step.route
         if route == "refuse":
             run_refuse(ctx, run, decision.refuse_reason or "unlisted_action")
+            return None
+        if route == "panel":
+            try:
+                if run_panel(ctx, run) is None:
+                    run_refuse(ctx, run, "needs_clarification")
+            except (
+                LookupError
+            ):  # a patient the caller cannot see is answered exactly like one that does not exist
+                pad(time.monotonic())
+                raise ApiError(ErrorCode.NOT_FOUND) from None
             return None
         if route in NEEDS_PATIENT and not patient_id:
             run_refuse(ctx, run, "needs_patient")

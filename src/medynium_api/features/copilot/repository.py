@@ -66,14 +66,14 @@ class CopilotRepository:
             notes = run(
                 cur, fetch_all,
                 "SELECT NOTE_ID, TITLE, NOTE_DATE, LEFT(BODY, 600) AS BODY FROM CLINICAL.CLINICAL_NOTE "
-                "WHERE PATIENT_ID = %s ORDER BY NOTE_DATE DESC, NOTE_ID LIMIT 2",
+                "WHERE PATIENT_ID = %s AND NOT IS_ARCHIVED ORDER BY NOTE_DATE DESC, NOTE_ID LIMIT 2",
                 (patient_id,),
             )  # fmt: skip
             try:  # before the allergy table exists the review still runs, without allergies
                 allergies = run(
                     cur, fetch_all,
                     "SELECT ALLERGY_ID, SUBSTANCE, REACTION, SEVERITY FROM CLINICAL.ALLERGY "
-                    "WHERE PATIENT_ID = %s AND IS_ACTIVE ORDER BY SUBSTANCE",
+                    "WHERE PATIENT_ID = %s AND IS_ACTIVE AND NOT IS_ARCHIVED ORDER BY SUBSTANCE",
                     (patient_id,),
                 )  # fmt: skip
             except Exception as exc:

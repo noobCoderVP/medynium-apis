@@ -56,7 +56,7 @@ def run_knowledge(ctx: Ctx, run: Run) -> AnswerObject:
         limits=Limits(
             checked=["Cortex Search over the label snapshot"],
             notes=["US FDA label text. The corpus is a snapshot, not a live feed."],
-            snapshot_date=dt.date.fromisoformat(ctx.settings.demo_as_of_date),
+            snapshot_date=dt.date.fromisoformat(ctx.settings.as_of_iso),
         ),
         conflicts=conflicts,
         bundle=bundle,

@@ -38,3 +38,5 @@ class RateLimiter:
 
 login_limiter = RateLimiter(limit=5, window_seconds=60)
 ask_limiter = RateLimiter(limit=10, window_seconds=60)
+write_limiter = RateLimiter(limit=60, window_seconds=60)  # clinical record changes per user
+upload_limiter = RateLimiter(limit=12, window_seconds=3600)  # report uploads per user per hour

@@ -130,3 +130,25 @@ CREATE TABLE IF NOT EXISTS FINDING (
   UPDATED_BY VARCHAR, UPDATED_AT TIMESTAMP_NTZ,
   PRIMARY KEY (FINDING_ID)
 ) COMMENT = 'Decisions on safety-review statements. Visible to everyone entitled to the patient.';
+
+-- (Phase 3) A clinician's note that an abnormal result has been looked at. Shared by everyone entitled to the patient.
+CREATE TABLE IF NOT EXISTS LAB_REVIEW (
+  LAB_ID VARCHAR NOT NULL,
+  PATIENT_ID VARCHAR NOT NULL,
+  REVIEWED_BY VARCHAR NOT NULL,
+  REVIEWED_AT TIMESTAMP_NTZ NOT NULL,
+  PRIMARY KEY (LAB_ID)
+) COMMENT = 'Marks an abnormal lab as reviewed so it leaves the pending list. Insert only. PATIENT_RAP.';
+
+
+-- (Phase 5) One vector per patient for similar-patient search. Built from PATIENT_CASE_SUMMARY, which holds only age
+-- band, sex, diagnoses, medicines and abnormal results: never a name, city, id or free-text note.
+CREATE TABLE IF NOT EXISTS PATIENT_EMBEDDING (
+  PATIENT_ID VARCHAR NOT NULL,
+  SUMMARY_TEXT VARCHAR NOT NULL,
+  SUMMARY_HASH VARCHAR NOT NULL COMMENT 'SHA-256 of the summary. An unchanged summary is never embedded again.',
+  EMBEDDING VECTOR(FLOAT, 1024) NOT NULL,
+  MODEL VARCHAR NOT NULL,
+  BUILT_AT TIMESTAMP_NTZ NOT NULL,
+  PRIMARY KEY (PATIENT_ID)
+) COMMENT = 'Case embeddings for similar-patient search. PATIENT_RAP, so a user can only ever be shown matches among their own patients.';

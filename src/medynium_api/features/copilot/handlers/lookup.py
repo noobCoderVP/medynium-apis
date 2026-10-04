@@ -60,7 +60,7 @@ def _limits(ctx: Ctx, checked: str) -> Limits:
     return Limits(
         checked=[checked],
         notes=["No AI call was needed: this is a plain SQL read of the precomputed record."],
-        snapshot_date=dt.date.fromisoformat(ctx.settings.demo_as_of_date),
+        snapshot_date=dt.date.fromisoformat(ctx.settings.as_of_iso),
     )
 
 

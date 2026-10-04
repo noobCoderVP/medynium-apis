@@ -64,7 +64,7 @@ class PatientService:
         history: HistoryRepository | None = None,
         sharing: SharingService | None = None,
     ) -> None:
-        self.as_of = settings.demo_as_of_date
+        self.as_of = settings.as_of_iso
         self.repo = repo or PatientRepository()
         self.history = history or HistoryRepository()
         self.sharing = sharing or SharingService(settings, self.repo)

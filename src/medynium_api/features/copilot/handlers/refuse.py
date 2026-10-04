@@ -14,8 +14,9 @@ MESSAGES = {
         "What I can do is show documented considerations from the indexed sources for you to review."
     ),
     "cross_patient": (
-        "I answer about one patient at a time, the one you have open. I can't compare patients or search across them. "
-        "Open a patient and ask again, or use the patient list filters."
+        "I can answer about the patient you have open, or about your own patients as a group: who needs attention, "
+        "what is pending, what changed, who is on a medicine. I can't look at patients you don't have, or at the "
+        "whole system. Rephrase it about your own patients, or open a patient and ask."
     ),
     "record_change": (
         "I can't change the clinical record. I can open a patient, show a timeline or lab trend, run the safety review, "

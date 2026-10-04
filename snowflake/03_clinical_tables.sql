@@ -162,3 +162,59 @@ CREATE TABLE IF NOT EXISTS CLINICAL_NOTE (
   CONTAINS_INJECTION BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Test marker only; never read by the agent.',
   PRIMARY KEY (NOTE_ID)
 ) COMMENT = 'Clinical notes and discharge summaries (generated).';
+
+-- (Phase 2) Uploaded reports and what was read from them. Nothing read from a report reaches the clinical record until a
+-- doctor approves it row by row (INTAKE procedures, snowflake/37_report_procedures.sql). Files live in a private stage.
+CREATE TABLE IF NOT EXISTS REPORT (
+  REPORT_ID VARCHAR NOT NULL COMMENT 'RPT-xxxxxxxx.',
+  PATIENT_ID VARCHAR NOT NULL,
+  FILENAME VARCHAR NOT NULL,
+  MIME_TYPE VARCHAR NOT NULL COMMENT 'application/pdf, image/png or image/jpeg, checked from the file content.',
+  SIZE_BYTES NUMBER NOT NULL,
+  SHA256 VARCHAR NOT NULL COMMENT 'The same file is not stored twice for one patient.',
+  STAGE_PATH VARCHAR NOT NULL COMMENT 'Path in INTAKE.REPORT_STAGE.',
+  PAGE_COUNT NUMBER,
+  STATUS VARCHAR NOT NULL COMMENT 'UPLOADED, PARSING, EXTRACTED, REVIEWED, REJECTED or FAILED.',
+  STATUS_DETAIL VARCHAR,
+  ATTEMPTS NUMBER NOT NULL DEFAULT 0,
+  UPLOADED_BY VARCHAR NOT NULL,
+  UPLOADED_AT TIMESTAMP_NTZ NOT NULL,
+  EXTRACTED_AT TIMESTAMP_NTZ,
+  REVIEWED_BY VARCHAR,
+  REVIEWED_AT TIMESTAMP_NTZ,
+  NAME_ON_REPORT VARCHAR COMMENT 'Patient name as printed on the report, for the wrong-patient check.',
+  IDENTITY_STATUS VARCHAR COMMENT 'MATCH, MISMATCH or UNKNOWN against the patient the report was uploaded to.',
+  IDENTITY_CONFIRMED_BY VARCHAR COMMENT 'Set when a doctor confirmed a mismatch before approving.',
+  MODEL VARCHAR,
+  ROWS_KEPT NUMBER,
+  ROWS_DROPPED NUMBER COMMENT 'Rows the model proposed whose quote or value was not in the page text.',
+  PRIMARY KEY (REPORT_ID)
+) COMMENT = 'Uploaded patient reports. Extraction is staged, never written to the record until approved.';
+
+CREATE TABLE IF NOT EXISTS REPORT_PAGE (
+  REPORT_ID VARCHAR NOT NULL,
+  PATIENT_ID VARCHAR NOT NULL,
+  PAGE_NO NUMBER NOT NULL,
+  PAGE_TEXT VARCHAR NOT NULL COMMENT 'Text read from the page. Treated as data, never as instructions.',
+  PRIMARY KEY (REPORT_ID, PAGE_NO)
+) COMMENT = 'The text of each report page, kept so every extracted row can be traced and highlighted.';
+
+CREATE TABLE IF NOT EXISTS REPORT_ROW (
+  ROW_ID VARCHAR NOT NULL COMMENT 'RRW-xxxxxxxx.',
+  REPORT_ID VARCHAR NOT NULL,
+  PATIENT_ID VARCHAR NOT NULL,
+  KIND VARCHAR NOT NULL COMMENT 'LAB, MEDICATION or DIAGNOSIS.',
+  FIELDS VARIANT NOT NULL COMMENT 'The values as they would be written (same names as the record forms).',
+  COLLECTED_AT TIMESTAMP_NTZ COMMENT 'For a lab: when it was collected (UTC). Null when the report gives no date.',
+  TIME_KNOWN BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'False when the report gave a date but no time; the time is never guessed.',
+  SOURCE_PAGE NUMBER NOT NULL,
+  SOURCE_QUOTE VARCHAR NOT NULL COMMENT 'The exact words on the page this row came from.',
+  CONFIDENCE NUMBER(4,3) NOT NULL COMMENT 'Set by code from what could be checked, not by the model.',
+  FLAGS VARIANT NOT NULL COMMENT 'unmatched_test, unmatched_drug, no_date, name_mismatch, duplicate.',
+  STATUS VARCHAR NOT NULL COMMENT 'PENDING, ACCEPTED, EDITED, REJECTED or APPROVED.',
+  DECIDED_BY VARCHAR,
+  DECIDED_AT TIMESTAMP_NTZ,
+  RECORD_ID VARCHAR COMMENT 'The clinical record created on approval.',
+  VERSION NUMBER NOT NULL DEFAULT 1,
+  PRIMARY KEY (ROW_ID)
+) COMMENT = 'Rows read from a report, waiting for a doctor to accept, edit or reject each one.';

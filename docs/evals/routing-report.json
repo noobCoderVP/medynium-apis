@@ -1,22 +1,22 @@
 {
  "summary": {
-  "total": 35,
-  "passed": 30,
-  "accuracy": 0.857,
-  "hard_passed": 8,
+  "total": 47,
+  "passed": 44,
+  "accuracy": 0.936,
+  "hard_passed": 9,
   "hard_total": 10,
   "per_route": {
-   "lookup": "6/7",
-   "analyst": "2/4",
+   "lookup": "7/7",
+   "analyst": "3/4",
    "knowledge": "4/4",
    "safety": "6/6",
    "action": "4/5",
-   "refuse": "8/9"
+   "refuse": "7/8",
+   "panel": "13/13"
   },
   "confusion": {
-   "analyst -> lookup": 2,
+   "analyst -> lookup": 1,
    "action -> safety": 1,
-   "lookup -> refuse": 1,
    "refuse -> lookup": 1
   }
  },
@@ -151,9 +151,9 @@
    "history": [],
    "hard": false,
    "actual": [
-    "lookup"
+    "analyst"
    ],
-   "pass": false,
+   "pass": true,
    "fallback": false,
    "escalated": false
   },
@@ -398,15 +398,15 @@
   {
    "q": "Which of my patients have low eGFR?",
    "expect": [
-    "refuse"
+    "panel"
    ],
-   "group": "refuse",
+   "group": "panel",
    "patient_id": "P-1042",
    "screen": "patient",
    "history": [],
    "hard": false,
    "actual": [
-    "refuse"
+    "panel"
    ],
    "pass": true,
    "fallback": false,
@@ -470,9 +470,9 @@
     ]
    ],
    "actual": [
-    "refuse"
+    "lookup"
    ],
-   "pass": false,
+   "pass": true,
    "fallback": false,
    "escalated": false
   },
@@ -655,6 +655,210 @@
    "hard": true,
    "actual": [
     "refuse"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Who are my patients and what is pending?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What needs my attention today?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "List my patients with diabetes",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Which of my patients are on warfarin?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "What changed across my patients since last week?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Show my patients with follow-ups due",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Which patients of mine have an abnormal HbA1c?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Find patients similar to this one",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Who has an unreviewed report?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "How many patients do I have?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Which of my patients had an emergency visit recently?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
+   ],
+   "pass": true,
+   "fallback": false,
+   "escalated": false
+  },
+  {
+   "q": "Any escalated findings across my patients?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false,
+   "actual": [
+    "panel"
    ],
    "pass": true,
    "fallback": false,

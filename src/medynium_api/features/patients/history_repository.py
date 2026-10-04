@@ -116,7 +116,7 @@ class HistoryRepository:
         limit: int,
         offset: int,
     ) -> list[Row] | None:
-        where = ["PATIENT_ID = %s"]
+        where = ["PATIENT_ID = %s", "NOT IS_ARCHIVED"]
         params: list[object] = [patient_id]
         if q:
             where.append("(TITLE ILIKE %s OR BODY ILIKE %s)")
@@ -146,6 +146,6 @@ class HistoryRepository:
             return fetch_one(
                 cur,
                 "SELECT NOTE_ID, TITLE, NOTE_TYPE, NOTE_DATE, ENCOUNTER_ID, AUTHOR, BODY FROM CLINICAL.CLINICAL_NOTE "
-                "WHERE PATIENT_ID = %s AND NOTE_ID = %s",
+                "WHERE PATIENT_ID = %s AND NOTE_ID = %s AND NOT IS_ARCHIVED",
                 (patient_id, note_id),
             )

@@ -246,9 +246,9 @@
   {
    "q": "Which of my patients have low eGFR?",
    "expect": [
-    "refuse"
+    "panel"
    ],
-   "group": "refuse",
+   "group": "panel",
    "patient_id": "P-1042",
    "screen": "patient",
    "history": [],
@@ -428,6 +428,138 @@
    "screen": "patient",
    "history": [],
    "hard": true
+  },
+  {
+   "q": "Who are my patients and what is pending?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What needs my attention today?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "List my patients with diabetes",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Which of my patients are on warfarin?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "What changed across my patients since last week?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Show my patients with follow-ups due",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Which patients of mine have an abnormal HbA1c?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Find patients similar to this one",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": "P-1042",
+   "screen": "patient",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Who has an unreviewed report?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "How many patients do I have?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Which of my patients had an emergency visit recently?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
+  },
+  {
+   "q": "Any escalated findings across my patients?",
+   "expect": [
+    "panel"
+   ],
+   "group": "panel",
+   "patient_id": null,
+   "screen": "dashboard",
+   "history": [],
+   "hard": false
   }
  ]
 }

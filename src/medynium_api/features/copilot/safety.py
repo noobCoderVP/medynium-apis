@@ -33,6 +33,9 @@ from medynium_api.features.copilot.repository import CopilotRepository, Facts
 from medynium_api.features.copilot.rules import allergy_conflicts
 
 log = structlog.get_logger()
+DRAFT_MAX_TOKENS = (
+    1000  # the reply is a JSON object; 550 cut it off mid-object in about half of the S1 runs
+)
 GAP_ONLY = (
     "None of this patient's current medicines are in the indexed sources, so nothing could be checked. "
     "That is a coverage gap, not a finding of no risk."
@@ -171,10 +174,14 @@ class SafetyReview:
     def _draft(self, system: str, user: str) -> tuple[dict[str, Any], Completion]:
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
         for _ in range(2):  # one repair attempt on malformed JSON, then a clean failure
-            completion = complete(self.settings.strong_model, messages, max_tokens=550)
+            completion = complete(self.settings.strong_model, messages, max_tokens=DRAFT_MAX_TOKENS)
             try:
                 return parse_json(completion.text), completion
             except ValueError as exc:
+                log.warning(
+                    "review_json_invalid", reason=str(exc)[:80], limit=DRAFT_MAX_TOKENS,
+                    prompt_tokens=completion.prompt_tokens, completion_tokens=completion.completion_tokens,
+                )  # fmt: skip
                 messages += [
                     {"role": "assistant", "content": completion.text},
                     {
@@ -198,7 +205,7 @@ class SafetyReview:
                 f"{c.drug_name} against {c.title} ({c.document_id}, {c.version}, effective {when(c.effective_date)})",
             )
         notes = [
-            f"Knowledge snapshot {self.settings.demo_as_of_date}. Label text is US FDA labelling, not Indian regulatory text."
+            f"Knowledge snapshot {self.settings.as_of_iso}. Label text is US FDA labelling, not Indian regulatory text."
         ]
         if injection:
             notes.append(
@@ -221,5 +228,5 @@ class SafetyReview:
         return Limits(
             checked=[by_drug[d] for d in checked if d in by_drug] + [f"{d}: label searched, nothing relevant found" for d in nothing],
             not_checked=[f"{g}: not in the indexed sources, so it was not checked" for g in gaps],
-            notes=notes, snapshot_date=__import__("datetime").date.fromisoformat(self.settings.demo_as_of_date),
+            notes=notes, snapshot_date=__import__("datetime").date.fromisoformat(self.settings.as_of_iso),
         )  # fmt: skip

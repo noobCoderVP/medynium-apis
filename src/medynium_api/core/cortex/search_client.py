@@ -60,15 +60,17 @@ class SearchClient:
         query: str,
         *,
         drug_ids: list[str] | None = None,
-        section: str | None = None,
+        section: str | list[str] | None = None,
         limit: int = 5,
+        min_score: float | None = None,
     ) -> list[Chunk]:
         body: dict[str, Any] = {"query": query, "columns": COLUMNS, "limit": limit}
         clauses: list[dict[str, Any]] = []
         if drug_ids:
             clauses.append({"@or": [{"@eq": {"DRUG_ID": d}} for d in drug_ids]})
         if section:
-            clauses.append({"@eq": {"SECTION_NAME": section}})
+            names = [section] if isinstance(section, str) else section
+            clauses.append({"@or": [{"@eq": {"SECTION_NAME": n}} for n in names]})
         if clauses:
             body["filter"] = clauses[0] if len(clauses) == 1 else {"@and": clauses}
         try:
@@ -93,7 +95,11 @@ class SearchClient:
                     score=float(scores.get("cosine_similarity", scores.get("reranker_score", 0.0))),
                 )
             )  # fmt: skip
-        floor = FILTERED_MIN_COSINE if drug_ids else MIN_COSINE
+        floor = (
+            min_score
+            if min_score is not None
+            else (FILTERED_MIN_COSINE if drug_ids else MIN_COSINE)
+        )
         return [c for c in chunks if c.score >= floor]
 
     def retrieve_for_patient(

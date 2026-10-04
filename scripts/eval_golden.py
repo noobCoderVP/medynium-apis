@@ -65,7 +65,7 @@ def visible_patient(session: Session) -> str:
 
 def truth(session: Session, name: str) -> list[dict[str, Any]]:
     sql = (GROUND_TRUTH / name).read_text(encoding="utf-8")
-    sql = sql.replace("{{AS_OF}}", get_settings().demo_as_of_date).strip().rstrip(";")
+    sql = sql.replace("{{AS_OF}}", get_settings().as_of_iso).strip().rstrip(";")
     with user_cursor(session.snowflake_role) as cur:
         return fetch_all(cur, sql)
 
@@ -308,13 +308,36 @@ def write_report(name: str, title: str, results: list[dict[str, Any]], extra: st
     (OUT / f"{name}-report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def store_run(session: Session, results: list[dict[str, Any]], started: datetime) -> str:
+    """Saves the run to ANALYTICS.GOLDEN_RUN / GOLDEN_RESULT as the admin's own role, so the admin screen can show it."""
+    run_id = f"GR-{started:%Y%m%d%H%M%S}"
+    passed = sum(r["pass"] for r in results)
+    with user_cursor(session.snowflake_role) as cur:
+        cur.execute(
+            "INSERT INTO ANALYTICS.GOLDEN_RUN (RUN_ID, STARTED_AT, FINISHED_AT, STATUS, STARTED_BY, GOLDEN_TOTAL, GOLDEN_PASSED, "
+            "ROUTING_TOTAL, ROUTING_CORRECT) SELECT %s, %s, SYSDATE(), %s, %s, %s, %s, 0, 0",
+            (run_id, started.replace(tzinfo=None), "PASSED" if passed == len(results) else "FAILED", session.user_id, len(results), passed),
+        )  # fmt: skip
+        cur.executemany(
+            "INSERT INTO ANALYTICS.GOLDEN_RESULT (RUN_ID, SEQ, SET_NAME, QUESTION, EXPECTED, ACTUAL, ROUTE_EXPECTED, ROUTE_ACTUAL, RESULT) "
+            "VALUES (%s, %s, %s, %s, %s, %s, NULL, %s, %s)",
+            [
+                (run_id, i, r["group"], r["question"][:300], "; ".join(r["why"])[:300] or "as expected", r["summary"]["short_answer"][:300], r["summary"]["route"], "PASS" if r["pass"] else "FAIL")
+                for i, r in enumerate(results, 1)
+            ],
+        )  # fmt: skip
+    return run_id
+
+
 def run_set(
     which: str,
     service: CopilotService,
     sessions: dict[str, Session],
     only: set[str] | None = None,
     repeat: int = 1,
+    store: bool = False,
 ) -> bool:
+    started = datetime.now(UTC)
     data = yaml.safe_load((ROOT / "evals" / f"{which}_set.yaml").read_text(encoding="utf-8"))
     results: list[dict[str, Any]] = []
     cases = [c for c in data["cases"] if not only or c["id"] in only]
@@ -336,6 +359,8 @@ def run_set(
         f" stability ({repeat} runs each)" if stability else ""
     )
     write_report(name, title, results)
+    if store and which == "golden" and not stability:
+        print("stored run", store_run(sessions["sharma"], results, started))
     return all(r["pass"] for r in results)
 
 
@@ -344,13 +369,16 @@ def main() -> None:
     parser.add_argument("--set", choices=["golden", "injection", "all"], default="all")
     parser.add_argument("--only", help="comma-separated case ids, for example G01,G02,G03")
     parser.add_argument("--repeat", type=int, default=1, help="run each case this many times")
+    parser.add_argument(
+        "--store", action="store_true", help="save the golden run for the admin screen"
+    )
     args = parser.parse_args()
     only = set(args.only.split(",")) if args.only else None
     service = CopilotService(get_settings(), build_ports())
     sessions = {key: make_session(email) for key, email in EMAILS.items()}
     ok = True
     for which in ("golden", "injection") if args.set == "all" else (args.set,):
-        ok = run_set(which, service, sessions, only, args.repeat) and ok
+        ok = run_set(which, service, sessions, only, args.repeat, args.store) and ok
     sys.exit(0 if ok else 1)
 
 

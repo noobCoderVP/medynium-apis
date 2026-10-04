@@ -70,7 +70,7 @@ def run_analyst(ctx: Ctx, run: Run) -> AnswerObject:
         limits=Limits(
             checked=["Cortex Analyst over the patient semantic view"],
             notes=["The query is shown in the evidence panel."],
-            snapshot_date=dt.date.fromisoformat(ctx.settings.demo_as_of_date),
+            snapshot_date=dt.date.fromisoformat(ctx.settings.as_of_iso),
         ),
         conflicts=[],
         bundle=EvidenceBundle(patient_records=items, sql=recorded),

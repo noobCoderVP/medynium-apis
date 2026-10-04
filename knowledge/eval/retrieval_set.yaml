@@ -36,10 +36,8 @@ queries:
   - {kind: brand, q: salbutamol dosage, drug: Albuterol sulfate (salbutamol)}
   - {kind: brand, q: Amlong, drug: Amlodipine besylate}
   - {kind: brand, q: Lotan, drug: Losartan potassium}
-  # Negatives: drugs that are not in the corpus ---------------------------------------------------------
+  # Negatives: drugs that are not in the corpus (amoxicillin-clavulanate, paracetamol and levetiracetam moved to
+# retrieval_set_india.yaml when Phase 4 indexed them) ---------------------------------------------------------
   - {kind: negative, q: perampanel seizures}
   - {kind: negative, q: ivermectin dosing for scabies}
-  - {kind: negative, q: amoxicillin clavulanate respiratory infection}
   - {kind: negative, q: insulin glargine hypoglycemia}
-  - {kind: negative, q: paracetamol overdose treatment}
-  - {kind: negative, q: levetiracetam dose adjustment}

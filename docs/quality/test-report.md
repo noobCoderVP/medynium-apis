@@ -76,3 +76,16 @@ poetry run poe eval:routing
 npm run check && npm run build             # in medynium-ui
 CHROME_PATH=<chrome.exe> npx lighthouse@12 http://localhost:3000/sign-in --only-categories=accessibility
 ```
+
+## Production-readiness run, 2026-10-04 (live account, `DEMO_AS_OF_DATE=2026-10-02`, one test file per process)
+
+| Set | Result |
+| --- | --- |
+| Unit tests, ruff, format, mypy strict (`poe check`) | 236 passed, clean |
+| Golden set (19, `scripts/eval_golden.py --store`) | 19/19. One earlier run failed G09 once; it passed on rerun (model variance) |
+| Injection set (12) | 12/12 after fixing I12 (an injected line made the router plan a review on another patient) |
+| Routing set (47; 12 panel cases added) | 44/47 (93.6%), panel 13/13. Misses: one analyst question routed to lookup, "Pin that evidence" routed to safety, and a bare "?" routed to lookup (hard case) |
+| Retrieval set (74 positive, 8 negative) | recall@3, recall@5, MRR 1.0; negatives answered honestly |
+| Live integration, per file | access_sql 8, admin_lifecycle 5 (+1 skipped), auth_flow 6, copilot 24 (+1 stale case, updated), dashboard 5, drug_coverage 11, ground_truth 4, knowledge 13, logs_are_clean 1, patients 13, pending 17, quality 1, records 11, reports 13, router_boundary 3, workspace 5, similar 8, refresh parity 7 |
+
+Flakes and known issues, stated plainly: the refresh-parity test failed 7/7 in the sweep because the read models had been refreshed at a different "as of" date; after `db.py apply 30` at the pinned date it passes 7/7. `test_similar` assistant case failed once in the sweep and passed on rerun. Running the whole live suite in one process still shows order-dependent pollution, so run it per file. Similar-patient quality is measured on a proxy only (`docs/quality/similar-eval.md`). Image OCR has been tried on one clean PNG.

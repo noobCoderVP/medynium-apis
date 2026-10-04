@@ -38,9 +38,13 @@ def main() -> None:
     parser.add_argument("--min-cosine", type=float, default=search_client.MIN_COSINE)
     args = parser.parse_args()
     search_client.MIN_COSINE = args.min_cosine
-    queries = yaml.safe_load(
-        (Path(__file__).parent / "retrieval_set.yaml").read_text(encoding="utf-8")
-    )["queries"]
+    queries = [  # the first 25 drugs, then the India-focused additions (Phase 4)
+        q
+        for name in ("retrieval_set.yaml", "retrieval_set_india.yaml")
+        for q in yaml.safe_load((Path(__file__).parent / name).read_text(encoding="utf-8"))[
+            "queries"
+        ]
+    ]
     service = KnowledgeService(get_settings())
     session = doctor()
 

@@ -1,6 +1,7 @@
 """Runtime configuration, read from environment variables (see .env.example)."""
 
 import base64
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -10,6 +11,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_KEY_PATH = Path.home() / ".medynium" / "keys" / "med_api_svc.p8"
 DEV_SESSION_SECRET = "dev-only-change-me"
+IST = timezone(timedelta(hours=5, minutes=30))  # a fixed offset: no tz database needed on any host
 
 
 class Settings(BaseSettings):
@@ -28,7 +30,9 @@ class Settings(BaseSettings):
     invite_hours: int = 72
     login_max_failures: int = 5
     login_lock_minutes: int = 15
-    demo_as_of_date: str = "2026-10-02"
+    # "Recent" and change flags are measured from this date. Empty means today in IST (production). Set it to
+    # 2026-10-02 to pin the seeded demo dataset, as the live tests do.
+    demo_as_of_date: str = ""
     public_app_url: str = "http://localhost:3000"  # base of invitation and reset links
 
     # Email (Resend). With no key the app runs and simply does not send.
@@ -62,8 +66,21 @@ class Settings(BaseSettings):
     cortex_semantic_view: str = "MEDYNIUM.ANALYTICS.PATIENT_SEMANTIC_VIEW"
     cortex_agent: str = "MEDYNIUM.ANALYTICS.MEDYNIUM_AGENT"
     router_confidence_threshold: float = 0.7
+    # Reading uploaded reports: a cost-effective hosted model, and caps on size and pages (each page costs credits).
+    extract_model: str = "llama3.3-70b"
+    report_max_bytes: int = 10 * 1024 * 1024
+    report_max_pages: int = 20
+    # Share of a similar-patient score that comes from embedding similarity; the rest is structured overlap.
+    similar_weight_embedding: float = 0.5
     router_timeout_seconds: float = 5.0
     agent_timeout_seconds: float = 30.0
+
+    @property
+    def as_of_iso(self) -> str:
+        """The date the read models treat as "now": the pinned demo date, or today in IST."""
+        if self.demo_as_of_date:
+            return self.demo_as_of_date
+        return datetime.now(IST).date().isoformat()
 
     @property
     def share_domain_list(self) -> list[str]:

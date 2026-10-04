@@ -17,7 +17,9 @@ GOOD = "correct-horse-battery-9"
 
 
 def token_of(accept_url: str) -> str:
-    return parse_qs(urlparse(accept_url).query)["token"][0]
+    parsed = urlparse(accept_url)
+    query = parse_qs(parsed.query).get("token")
+    return query[0] if query else parsed.path.rstrip("/").rsplit("/", 1)[-1]
 
 
 @pytest.fixture
@@ -152,6 +154,17 @@ def test_lockout_then_disable_and_reset(admin: TestClient, users: dict) -> None:
 
 
 def test_the_last_admin_cannot_be_disabled(admin: TestClient, users: dict) -> None:
+    """Only safe to run live while Sharma is the sole active admin; otherwise the request would really disable her.
+    The rule itself is covered without Snowflake in tests/test_last_admin_guard.py."""
+    admins = [
+        u
+        for u in admin.get("/admin/users").json()["items"]
+        if u["is_admin"] and u["status"] == "ACTIVE"
+    ]
+    if len(admins) != 1:
+        pytest.skip(
+            "more than one active admin: disabling one would succeed (see test_last_admin_guard.py)"
+        )
     response = admin.patch(
         f"/admin/users/{users['sharma']['user_id']}", json={"status": "DISABLED"}
     )

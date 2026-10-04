@@ -19,14 +19,21 @@ from medynium_api.core.config import Settings
 from medynium_api.core.cortex.complete import complete
 from medynium_api.core.errors import ApiError
 from medynium_api.features.copilot import prompts
+from medynium_api.features.copilot.panel_plan import plan_for, validate_calls
 
 log = structlog.get_logger()
-Route = Literal["lookup", "analyst", "knowledge", "safety", "action", "refuse"]
+Route = Literal["lookup", "analyst", "knowledge", "safety", "panel", "action", "refuse"]
 ACTIONS = ("open_patient", "show_timeline", "run_safety_review", "pin_evidence")
 NEEDS_PATIENT = {"lookup", "analyst", "safety"}
 
+# What stays refused: patients beyond the caller's own (the whole system, other clinicians' patients). Questions about
+# the caller's own panel ("which of my patients...", "who is on metformin") are answered by the panel tools.
 POPULATION = re.compile(
-    r"\b(all|every|each|which|how many|list|other|another)\b.{0,40}\b(patients|people)\b|\beveryone\b|\b(other|another) patient\b",
+    r"\b(database|hospital|clinic-?wide|system-?wide|entire (system|hospital|clinic|database)|everyone in the|"
+    r"every patient in|all (the )?patients (in|of|at) the|"
+    r"(other|another|different) (doctor|clinician|physician|user|nurse|assistant)s?|someone else's|"
+    r"(other|another) patient|"
+    r"(dr|doctor|nurse)\.? [a-z]+('s)? patients|patients (does|of) (dr|doctor))\b",
     re.IGNORECASE,
 )
 RECORD_CHANGE = re.compile(
@@ -116,6 +123,17 @@ def decide(
     if forced:
         step = Step(route="refuse", confidence=1.0, reason=f"rule guard: {forced}")
         return Decision([step], model=None, refuse_reason=forced, notes=["rule guard"])
+    panel = plan_for(question, patient_id)
+    if panel:  # the common panel questions need no model, so they work even when the router is down
+        step = Step(
+            route="panel",
+            params={"calls": panel},
+            confidence=1.0,
+            reason="panel question recognised",
+        )
+        return Decision(
+            [step], model=None, notes=["panel question recognised by rule, no model call"]
+        )
     try:
         steps = call_router(settings, question, screen, patient_id, history)
     except (ValueError, ApiError) as exc:
@@ -149,10 +167,16 @@ def decide(
                 )
         elif step.action is not None:
             step = step.model_copy(update={"action": None})
+        if step.route == "panel" and validate_calls(step.params) is None:
+            return Decision(  # an unknown tool or a malformed filter never reaches the database
+                [Step(route="refuse", confidence=1.0, reason="panel request not understood")],
+                settings.router_model,
+                "needs_clarification",
+            )
         if step.confidence < settings.router_confidence_threshold and step.route != "refuse":
             escalated = True  # escalate up to the careful route; never down to action
             step = Step(
-                route="safety" if patient_id else "refuse",
+                route="safety" if patient_id and step.route != "panel" else "refuse",
                 confidence=step.confidence,
                 reason="low confidence: escalated",
             )

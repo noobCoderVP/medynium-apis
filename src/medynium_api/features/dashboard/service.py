@@ -25,7 +25,7 @@ class DashboardService:
         self.repo = repo or DashboardRepository()
 
     def load(self, session: Session) -> DashboardResponse:
-        as_of = self.settings.demo_as_of_date
+        as_of = self.settings.as_of_iso
         data: Any = self.repo.load(session.snowflake_role, as_of)
         worklist = [
             WorklistItem(

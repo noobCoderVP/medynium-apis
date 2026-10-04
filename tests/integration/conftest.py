@@ -18,6 +18,8 @@ def direct_api_cookie_path() -> None:
     """Tests call the API directly, not through the UI's /api proxy, so the refresh cookie lives under /auth."""
     mp = pytest.MonkeyPatch()
     mp.setenv("REFRESH_COOKIE_PATH", "/auth")
+    # The ground-truth numbers belong to the seeded dataset as of this date; unset in production means today (IST).
+    mp.setenv("DEMO_AS_OF_DATE", "2026-10-02")
     get_settings.cache_clear()
 
 

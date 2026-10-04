@@ -1,6 +1,7 @@
 """Database runner: the only way setup SQL is applied.
 
   python scripts/db.py bootstrap        run 00_bootstrap.sql as ACCOUNTADMIN (once)
+  python scripts/db.py bootstrap-writer run 00_bootstrap_writer.sql as ACCOUNTADMIN (once, after 08_write_path.sql)
   python scripts/db.py apply [prefix]   run numbered files (optionally only those starting with prefix)
   python scripts/db.py check            run 90_checks.sql and print the results
   python scripts/db.py status           object and row counts
@@ -32,6 +33,15 @@ def cmd_bootstrap() -> None:
     try:
         n = run_script(conn, SQL_DIR / "00_bootstrap.sql", build_vars())
         print(f"00_bootstrap.sql: {n} statements")
+    finally:
+        conn.close()
+
+
+def cmd_bootstrap_writer() -> None:
+    conn = connect("ACCOUNTADMIN")
+    try:
+        n = run_script(conn, SQL_DIR / "00_bootstrap_writer.sql", build_vars())
+        print(f"00_bootstrap_writer.sql: {n} statements")
     finally:
         conn.close()
 
@@ -116,11 +126,15 @@ def cmd_status() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=["bootstrap", "apply", "check", "status", "sql"])
+    parser.add_argument(
+        "command", choices=["bootstrap", "bootstrap-writer", "apply", "check", "status", "sql"]
+    )
     parser.add_argument("arg", nargs="?")
     args = parser.parse_args()
     if args.command == "bootstrap":
         cmd_bootstrap()
+    elif args.command == "bootstrap-writer":
+        cmd_bootstrap_writer()
     elif args.command == "apply":
         cmd_apply(args.arg)
     elif args.command == "check":

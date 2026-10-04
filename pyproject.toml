@@ -42,12 +42,15 @@ select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "S", "RUF"]
 ignore = ["S101", "E501", "S105"]  # E501: the formatter wraps code; long SQL strings are fine
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S105", "S106", "S608"]
+"tests/**" = ["S105", "S106", "S608", "RUF001"]
 # Repositories build SQL from fixed identifiers and constants only; every value is bound with %s.
 "src/**/*repository.py" = ["S608"]
 "src/**/store.py" = ["S608"]  # only a string of %s placeholders is built; every value is bound
+"src/**/panel_sql.py" = ["S608"]  # fixed column lists and whitelisted kinds only; every value is bound
+"src/**/similar.py" = ["S608"]  # only a string of %s placeholders and a constant limit are built; every value is bound
+"src/**/extraction.py" = ["RUF001"]  # squash() folds look-alike dashes, quotes and spaces that OCR produces
 "scripts/**" = ["S603", "S608", "S311", "B007", "RUF100"]
-"data/**" = ["S603", "S608", "S311", "B007", "RUF100"]
+"data/**" = ["S603", "S607", "S608", "S311", "B007", "RUF100"]
 
 [tool.mypy]
 python_version = "3.12"

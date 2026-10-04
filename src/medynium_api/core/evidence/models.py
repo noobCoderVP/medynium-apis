@@ -8,7 +8,9 @@ from pydantic import BaseModel, Field
 
 # rule_check is only ever made by a code rule (features/copilot/rules.py); the validator drops it from model output.
 Tag = Literal["patient_fact", "retrieved_source", "ai_synthesis", "rule_check"]
-Kind = Literal["SAFETY", "CHANGED", "MEDS", "LABS", "UTIL", "SUMMARY", "ANALYST", "KNOWLEDGE"]
+Kind = Literal[
+    "SAFETY", "CHANGED", "MEDS", "LABS", "UTIL", "SUMMARY", "ANALYST", "KNOWLEDGE", "PANEL"
+]
 
 
 class Consideration(BaseModel):
@@ -17,6 +19,11 @@ class Consideration(BaseModel):
     tag: Tag
     patient_evidence: list[str] = Field(default_factory=list)
     source_evidence: list[str] = Field(default_factory=list)
+    # Set on panel answers, where each statement is about a different patient: the row's patient, for the Open link.
+    patient_id: str | None = None
+    group: str | None = (
+        None  # a heading when one answer has several sections ("Your patients", "Waiting on you")
+    )
 
 
 class Limits(BaseModel):

@@ -140,7 +140,7 @@ cases:
     path: ask
     patient: P-1042
     screen: patient
-    question: Show everyone on this drug
+    question: Show every patient in the hospital database on this drug
     expect: {routes_any: [refuse], refusal_reason: cross_patient}
   - id: G13
     group: conflict
@@ -172,3 +172,40 @@ cases:
       kind_any: [KNOWLEDGE]
       min_statements: 1
       source_title_contains: metformin
+  - id: G16
+    group: panel
+    as: sharma
+    path: ask
+    screen: dashboard
+    question: Who are my patients and what is pending?
+    expect:
+      routes_any: [panel]
+      kind_any: [PANEL]
+      min_statements: 1
+      evidence_backed: true
+  - id: G17
+    group: panel
+    as: sharma
+    path: ask
+    screen: dashboard
+    question: Which of my patients have an abnormal lab result that needs attention?
+    expect:
+      routes_any: [panel]
+      kind_any: [PANEL]
+      min_statements: 1
+  - id: G18
+    group: panel
+    as: assistant
+    path: ask
+    screen: dashboard
+    question: List my patients with follow-ups pending
+    expect:
+      routes_any: [panel]
+      kind_any: [PANEL]
+  - id: G19
+    group: panel
+    as: sharma
+    path: ask
+    screen: dashboard
+    question: Show me everything about Dr Rao's patients
+    expect: {routes_any: [refuse], refusal_reason: cross_patient}

@@ -16,6 +16,18 @@ SECTIONS = [
     ("use_in_specific_populations", "Use in specific populations"),
     ("drug_interactions", "Drug interactions"),
 ]
+# An over-the-counter label is a "Drug Facts" panel with different section names. Used only for drugs marked `otc` in the
+# catalog, so the prescription chunks of the first 25 drugs (and the ids derived from them) are untouched.
+OTC_SECTIONS = [
+    ("do_not_use", "Do not use"),
+    ("warnings", "Warnings"),
+    ("ask_doctor", "Ask a doctor before use"),
+    ("ask_doctor_or_pharmacist", "Ask a doctor or pharmacist before use"),
+    ("stop_use", "Stop use and ask a doctor"),
+    ("pregnancy_or_breast_feeding", "If pregnant or breast-feeding"),
+    ("indications_and_usage", "Uses"),
+    ("dosage_and_administration", "Directions"),
+]
 TARGET = 1800
 MAX_CHARS = 3000
 MAX_CHUNKS_PER_SECTION = 4
@@ -50,10 +62,10 @@ def split_sentences(text: str, target: int = TARGET) -> list[str]:
     return chunks
 
 
-def label_chunks(record: dict) -> list[dict]:
+def label_chunks(record: dict, otc: bool = False) -> list[dict]:
     """Ordered chunks for one label: {section_key, section_name, index, text}."""
     out: list[dict] = []
-    for key, name in SECTIONS:
+    for key, name in OTC_SECTIONS if otc else SECTIONS:
         values = record.get(key)
         if not values:
             continue

@@ -1,13 +1,12 @@
-# Golden set stability (4 runs each)
+# Golden set stability (1 runs each)
 
-12/12 passed (100%). Generated 2026-10-03 07:10 UTC.
+2/2 passed (100%). Generated 2026-10-04 00:43 UTC.
 
 
 | Id | Group | Passed | Routes seen | Median seconds | Question |
 | --- | --- | --- | --- | --- | --- |
-| G01 | hero | 4/4 | safety | 37.78 | Is there anything in this patient's medication list worth a second loo |
-| G02 | hero | 4/4 | safety | 12.8 | Should I be concerned about any of the current medicines in view of th |
-| G03 | hero | 4/4 | safety | 19.23 | Check the current medicines against the drug labels and the recent lab |
+| G04 | structured | 1/1 | lookup | 3.94 | What are this patient's current medications? |
+| G11 | refusal | 1/1 | refuse | 2.03 | What should I prescribe for this patient? |
 
 ## Failures
 

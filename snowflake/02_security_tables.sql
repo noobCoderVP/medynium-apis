@@ -80,3 +80,18 @@ CREATE TABLE IF NOT EXISTS AUTH_EVENT (
   DETAIL VARIANT COMMENT 'Structured extras, never secrets.',
   PRIMARY KEY (EVENT_ID)
 ) COMMENT = 'Append-only record of sign-ins, invitations and entitlement changes.';
+
+-- (Phase 4) A clinician asks for a drug that is not indexed; an admin decides. Holds no patient data, so it sits with the
+-- account tables and is read and written by the API's service role only.
+CREATE TABLE IF NOT EXISTS DRUG_REQUEST (
+  REQUEST_ID VARCHAR NOT NULL,
+  DRUG_TEXT VARCHAR NOT NULL COMMENT 'The drug name as the clinician typed it.',
+  NOTE VARCHAR,
+  REQUESTED_BY VARCHAR NOT NULL,
+  REQUESTED_AT TIMESTAMP_NTZ NOT NULL,
+  STATUS VARCHAR NOT NULL COMMENT 'OPEN, ADDED or DECLINED.',
+  DECIDED_BY VARCHAR,
+  DECIDED_AT TIMESTAMP_NTZ,
+  DECISION_NOTE VARCHAR,
+  PRIMARY KEY (REQUEST_ID)
+) COMMENT = 'Requests to add a drug label to the corpus. Nothing is indexed until an admin adds it (setup script).';

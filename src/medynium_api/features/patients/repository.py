@@ -37,7 +37,7 @@ def active_allergies(cur: Any, patient_id: str) -> list[Row]:
         return fetch_all(
             cur,
             "SELECT ALLERGY_ID, SUBSTANCE, REACTION, SEVERITY FROM CLINICAL.ALLERGY "
-            "WHERE PATIENT_ID = %s AND IS_ACTIVE "
+            "WHERE PATIENT_ID = %s AND IS_ACTIVE AND NOT IS_ARCHIVED "
             "ORDER BY DECODE(SEVERITY, 'SEVERE', 0, 'MODERATE', 1, 2), SUBSTANCE",
             (patient_id,),
         )
@@ -140,7 +140,7 @@ class PatientRepository:
         limit: int,
         offset: int,
     ) -> tuple[list[Row], int] | None:
-        where = ["m.PATIENT_ID = %s", "(NOT %s OR m.IS_ACTIVE)"]
+        where = ["m.PATIENT_ID = %s", "NOT m.IS_ARCHIVED", "(NOT %s OR m.IS_ACTIVE)"]
         params: list[object] = [patient_id, active_only]
         if q:
             where.append("(m.DRUG_NAME ILIKE %s OR m.DESCRIPTION ILIKE %s)")
@@ -173,7 +173,7 @@ class PatientRepository:
             "FROM CLINICAL.MEDICATION m LEFT JOIN "
             "(SELECT DRUG_ID, ARRAY_SLICE(ARRAY_AGG(DISTINCT NAME_TEXT), 0, 3) AS BRANDS "
             " FROM KNOWLEDGE.DRUG_NAME_MAP WHERE NAME_KIND = 'INDIAN_BRAND' GROUP BY DRUG_ID) b "
-            "ON b.DRUG_ID = m.DRUG_ID WHERE m.PATIENT_ID = %s AND (NOT %s OR m.IS_ACTIVE) "
+            "ON b.DRUG_ID = m.DRUG_ID WHERE m.PATIENT_ID = %s AND NOT m.IS_ARCHIVED AND (NOT %s OR m.IS_ACTIVE) "
             "ORDER BY m.IS_ACTIVE DESC, m.START_DATE DESC, m.MEDICATION_ID LIMIT 200",
             (patient_id, active_only),
         )
@@ -231,7 +231,7 @@ class PatientRepository:
             points = fetch_all(
                 cur,
                 "SELECT LAB_ID, OBSERVED_AT::DATE AS D, VALUE_NUM FROM CLINICAL.LAB_RESULT WHERE PATIENT_ID = %s "
-                "AND LOINC_CODE = %s AND VALUE_NUM IS NOT NULL AND OBSERVED_AT::DATE <= %s::DATE "
+                "AND LOINC_CODE = %s AND VALUE_NUM IS NOT NULL AND OBSERVED_AT::DATE <= %s::DATE AND NOT IS_ARCHIVED "
                 "ORDER BY OBSERVED_AT, LAB_ID",
                 (patient_id, ref["loinc_code"], as_of),
             )
