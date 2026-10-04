@@ -1,29 +1,108 @@
+<div align="center">
+
+<!-- MEDIA: banner. Suggested file: docs/media/banner.png (1600x400) -->
+<img src="docs/media/banner.png" alt="Medynium API: governed Patient 360 and clinical agent on Snowflake" width="100%" />
+
 # Medynium API
 
-**A governed Patient 360 and clinical agent, built on Snowflake.**
+### A governed Patient 360 and clinical agent, built on Snowflake.
 
-Medynium gives a doctor one place to see a patient's whole story and ask questions about it. Every answer shows the evidence behind it, and the AI can only see what the signed-in user is allowed to see. This repo is the backend: a FastAPI service in front of Snowflake and Snowflake Cortex.
+The backend where access control binds the AI, every answer carries evidence, and the agent can only do what it is allowed to do.
 
-> Synthetic data only. Decision support, not diagnosis. Built for the Snowflake CoCo CLI Hackathon 2026.
+![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-Pydantic%20v2-009688?logo=fastapi&logoColor=white)
+![Snowflake Cortex](https://img.shields.io/badge/Snowflake-Cortex%20Analyst%20%C2%B7%20Search%20%C2%B7%20Agent-29B5E8?logo=snowflake&logoColor=white)
+![mypy strict](https://img.shields.io/badge/mypy-strict-2A6DB2)
+![Cloud Run](https://img.shields.io/badge/deploy-Cloud%20Run-4285F4?logo=googlecloud&logoColor=white)
+![Synthetic data](https://img.shields.io/badge/data-synthetic%20only-orange)
 
-The web app lives in the sibling repo, `medynium-ui`, and talks to this API only.
+**[Interactive API docs](#quick-start)** · **[UI repo](../medynium-ui)** · **[Mobile repo](../medynium-app)**
 
-## Why it is different
+</div>
+
+> **Synthetic data only. Decision support, not diagnosis.** Built for the Snowflake CoCo CLI Hackathon 2026.
+
+---
+
+## Table of contents
+
+1. [Why this backend is different](#why-this-backend-is-different)
+2. [Impact](#impact)
+3. [Capabilities](#capabilities)
+4. [Architecture](#architecture)
+5. [How a question is answered](#how-a-question-is-answered)
+6. [Security and governance model](#security-and-governance-model)
+7. [Data model on Snowflake](#data-model-on-snowflake)
+8. [API surface](#api-surface)
+9. [Quality and evaluation](#quality-and-evaluation)
+10. [Tech stack](#tech-stack)
+11. [Repo map](#repo-map)
+12. [Quick start](#quick-start)
+13. [Daily commands](#daily-commands)
+14. [Deploy](#deploy)
+15. [Roadmap and honest limits](#roadmap-and-honest-limits)
+16. [Docs](#docs)
+17. [Rules that must not be broken](#rules-that-must-not-be-broken)
+
+---
+
+## Why this backend is different
+
+Most clinical AI demos stop at "ask a question, get an answer". Medynium treats the hard parts as the product: who may see what, where each claim came from, and what the AI is permitted to do.
 
 | Promise | How the API keeps it |
 | --- | --- |
 | **The AI sees no more than the user** | Every request runs in Snowflake under the caller's own role, with row access policies. No shared service role reads patient data. |
-| **Denied looks the same as missing** | A patient you cannot open returns the exact same `404 not_found` as one that does not exist. |
+| **Denied looks the same as missing** | A patient you cannot open returns the exact same `404 not_found` as one that does not exist, with padded latency. |
 | **Evidence or nothing** | A validator maps each answer statement to a patient record or a source chunk and drops anything unbacked. "Nothing found in the indexed sources" is never written as "no risk". |
-| **The agent can do four things** | `open_patient`, `show_timeline`, `run_safety_review`, `pin_evidence`. The list is enforced on the server and anything else is audited and refused. |
-| **Prompt injection is data, not instructions** | Text inside notes and drug labels is never followed as a command. |
+| **A closed set of agent actions** | `open_patient`, `show_timeline`, `run_safety_review`, `pin_evidence`. Enforced on the server; anything else is audited and refused. |
+| **The agent proposes, a human decides** | The assistant can prepare a note, allergy, diagnosis or medicine as a preview. Only a doctor's approval writes it. |
+| **Prompt injection is data, not instructions** | Text inside notes, reports and drug labels is never followed as a command. |
+| **Everything is audited** | Every question, action, refusal and denial is written, with the prompt version hashed into the row. |
+
+---
+
+## Impact
+
+- **Clinical safety, not just convenience.** The hero safety review connects a patient's documented history to the exact section of a drug label, turning a task that means opening several systems and a PDF into one cited answer.
+- **Trust that survives scrutiny.** Reviewers, auditors and clinicians can ask "why did it say that?" and get the records, the SQL and the source section, every time.
+- **Honest about what it does not know.** A medicine with no indexed label returns a gap, not a guess, which removes the most dangerous kind of clinical-AI error: false reassurance.
+- **Governance that holds up for sensitive data.** Entitlements are enforced by the database, so the AI layer cannot be talked into crossing a boundary the user does not have.
+- **One platform, small footprint.** Structured data, document search, the agent and row-level security all live in Snowflake. There is no Postgres, Redis or vector store to secure, sync or pay for.
+- **Built for its market.** Indian brand names resolve to generic drugs, claims are in INR, and the medicine corpus includes the National List of Essential Medicines.
+
+---
+
+## Capabilities
+
+| Capability | What it does | Feature folder |
+| --- | --- | --- |
+| **Patient 360** | List, overview, medications, labs and trends, timeline, claims, notes, all under entitlement | `patients/` |
+| **Dashboard and brief** | Worklist with change flags, utilisation, and a rule-based patient brief of what changed and what is missing, no model needed | `dashboard/`, `brief/` |
+| **Clinical assistant** | Routes free text to the cheapest safe handler, streams steps over SSE, validates every statement | `copilot/` |
+| **Safety review** | Cortex Agent combining Cortex Analyst (patient facts) and Cortex Search (label text) into tagged, cited statements | `copilot/` |
+| **Evidence (Why?)** | Records, SQL and source sections behind any answer | `evidence/`, `pins/` |
+| **Findings** | A clinician's recorded decision on a statement: acknowledge, follow up, escalate or dismiss, with rules enforced server-side | `findings/` |
+| **Pending work** | One view of open findings, due follow-ups, unreviewed abnormal labs and recent emergency visits, shared with the assistant so they cannot disagree | `pending/` |
+| **Knowledge search** | Cited label search with brand and typo resolution, honest gaps and nearby suggestions | `knowledge/`, `drug_coverage/` |
+| **Reports intake** | PDF or image to structured rows with quoted source words and page, doctor approval required | `reports/` |
+| **Records (write path)** | Doctors register patients and add, edit, archive and restore clinical records, versioned with an insert-only history | `records/` |
+| **Similar patients** | Embedding plus structured overlap across the clinician's own patients, explained and never padded | `similar/` |
+| **Saved views** | Preview first, nothing stored without approval | `views/` |
+| **Audit** | The caller's own audit entries, denials included | `audit/` |
+| **Auth and admin** | Argon2id passwords, refresh rotation with reuse detection, lockout, optional emailed code, invites, entitlements | `auth/`, `admin/` |
+
+---
 
 ## Architecture
 
+<!-- MEDIA: optional polished export. Suggested: docs/media/architecture.png -->
 ```mermaid
 flowchart LR
   Doc([Doctor or assistant]) --> UI[medynium-ui<br/>Next.js]
+  Doc --> App[medynium-app<br/>Expo]
   UI -->|same-origin /api proxy<br/>httpOnly cookies| API
+  App -->|bearer mode| API
   subgraph API [medynium-apis · FastAPI]
     direction TB
     R[Routers] --> S[Services] --> Rep[Repositories]
@@ -39,26 +118,7 @@ flowchart LR
   end
 ```
 
-Snowflake is the only datastore: no Postgres, Redis or vector store.
-
-### How a question is answered
-
-A small model reads each free-text question and picks one route. The strongest model is used only when patient data and documents must be combined.
-
-```mermaid
-flowchart TD
-  Q[Question] --> RT{Router model<br/>sees question, screen, patient id only}
-  RT -->|lookup| L[Fixed SQL on ANALYTICS<br/>no model]
-  RT -->|analyst| A[Cortex Analyst<br/>text to SQL]
-  RT -->|knowledge| K[Cortex Search<br/>cited label sections]
-  RT -->|safety| SA[Cortex Agent<br/>Analyst + Search]
-  RT -->|action| AC[Allowlist handler]
-  RT -->|refuse| RF[Canned refusal]
-  L & A & K & SA & AC & RF --> V[Entitlement, allowlist and evidence validator]
-  V --> OUT[Answer with evidence, audited]
-```
-
-The router is not a security boundary. Entitlement, allowlist and evidence checks run again on every route, and a failed router never produces an action.
+Snowflake is the only datastore. External data (Synthea, openFDA, the A-Z India medicines dataset) is read at ingestion time by a person; no outside API is called at run time.
 
 ### Layers inside the code
 
@@ -71,6 +131,128 @@ flowchart LR
 ```
 
 `tests/test_architecture.py` enforces the rules: a feature never imports another feature, only repositories (and `core/`) import the Snowflake driver, and files stay under 300 lines.
+
+---
+
+## How a question is answered
+
+A small model reads each free-text question and picks one route. The strongest model is used only when patient data and documents must be combined.
+
+```mermaid
+flowchart TD
+  Q[Question] --> RT{Router model<br/>sees question, screen, patient id only}
+  RT -->|lookup| L[Fixed SQL on ANALYTICS<br/>no model]
+  RT -->|analyst| A[Cortex Analyst<br/>text to SQL]
+  RT -->|knowledge| K[Cortex Search<br/>cited label sections]
+  RT -->|safety / agent| SA[Cortex Agent<br/>Analyst + Search]
+  RT -->|panel| P[Read-only tools over<br/>the clinician's own patients]
+  RT -->|propose| PR[Preview a write<br/>doctor approves]
+  RT -->|action| AC[Allowlist handler]
+  RT -->|refuse| RF[Canned refusal]
+  L & A & K & SA & P & PR & AC & RF --> V[Entitlement, allowlist and evidence validator]
+  V --> OUT[Answer with evidence, audited]
+```
+
+The router is not a security boundary. Entitlement, allowlist and evidence checks run again on every route, and a failed router never produces an action. Cheap routes (fixed SQL, label search) skip the strong model entirely, which keeps cost and latency low.
+
+### The safety review
+
+```mermaid
+flowchart TD
+  A[Safety review request] --> B[Resolve patient and check entitlement under the user's role]
+  B -->|denied or missing| N[404 not_found, audited]
+  B --> C[Cortex Agent under the user's role]
+  C --> D[Analyst tool: medicines, labs, diagnoses for this patient]
+  C --> E[Search tool: label chunks for those drugs]
+  D & E --> F[Draft statements]
+  F --> G[Validator]
+  G -->|matching evidence| H[Keep and tag]
+  G -->|unbacked or tag mismatch| I[Drop]
+  H --> J[Store answer, evidence and audit row]
+```
+
+---
+
+## Security and governance model
+
+| Layer | Control |
+| --- | --- |
+| **Identity** | Argon2id passwords, JWT access and refresh cookies (bearer mode for mobile), refresh rotation with reuse detection, lockout, optional emailed code |
+| **Database access** | Key-pair auth for the service, then `USE ROLE` to the caller's own role per request. No runtime path uses the admin role |
+| **Row-level security** | Row access policies on entitlements, including the vector table behind similar-patient search |
+| **Denial semantics** | Denied and missing are indistinguishable in body and timing, and no error message ever carries a patient ID |
+| **AI boundary** | The router never sees patient records or document text. Agent tools are a closed list with validated arguments |
+| **Write path** | Doctors only, versioned, idempotent, double-checked for entitlement (API, then inside Snowflake), written through procedures owned by a dedicated writer role |
+| **Evidence** | Statements without matching evidence are dropped; AI synthesis is tagged as such |
+| **Injection** | Instructions inside notes, labels or uploaded reports are treated as text and noted, never obeyed |
+| **Audit** | One writer for every route, including denials; prompts are versioned files hashed into each row |
+| **Secrets** | Only `.env.example` in the repo; nothing sensitive in logs |
+
+The access and safety checks are mapped to tests in [docs/quality/access-and-safety-matrix.md](docs/quality/access-and-safety-matrix.md).
+
+---
+
+## Data model on Snowflake
+
+| Schema | Holds |
+| --- | --- |
+| `SECURITY` | Users, invites, sessions, entitlements |
+| `CLINICAL` | Synthetic patients, encounters, medications, labs, notes, claims, reports |
+| `INTAKE` | Report stage and the write procedures |
+| `KNOWLEDGE` | Public drug-label chunks and the Cortex Search service |
+| `ANALYTICS` | Precomputed Patient 360 read models, pending items, audit, answers and evidence, findings, patient embeddings |
+
+Setup SQL lives in `snowflake/`, numbered in run order and idempotent. Seed data and loaders are in `data/` and `knowledge/`. See [docs/database/](docs/database/README.md).
+
+---
+
+## API surface
+
+Interactive docs at `/docs` once the server is running. The committed contract is [docs/api/openapi.json](docs/api/openapi.json), which the UI and mobile app generate types from.
+
+| Group | Representative endpoints |
+| --- | --- |
+| Auth | `POST /auth/login`, `/auth/refresh`, `/auth/logout`, `GET /me` |
+| Patients | `GET /patients`, `/patients/{id}`, `/medications`, `/labs`, `/timeline`, `/claims`, `/notes` |
+| Brief and pending | `GET /patients/{id}/brief`, `/changes`, `/gaps`, `GET /pending` |
+| Assistant | `POST /copilot/ask` (SSE), `POST /patients/{id}/safety-review`, `POST /agent/actions` |
+| Evidence | `GET /evidence/{answer_id}`, pins under `/patients/{id}/pins` |
+| Findings | `GET/POST /patients/{id}/findings`, `PATCH /findings/{id}` |
+| Knowledge | `GET /knowledge/search`, `/knowledge/drugs`, `POST /knowledge/requests` |
+| Reports and records | `POST /patients/{id}/reports`, record writes under `/patients/{id}/{kind}` |
+| Similar and views | `GET /patients/{id}/similar`, `POST /views/preview`, `POST /views` |
+| Audit and admin | `GET /audit`, `/admin/users`, `/admin/invites`, `/admin/knowledge/coverage` |
+| Health | `GET /health` (no credentials needed) |
+
+Errors always use `{ "error": "...", "message": "..." }` with codes from `core/errors.py`.
+
+---
+
+## Quality and evaluation
+
+Figures from the latest [test report](docs/quality/test-report.md), run on 2026-10-04 against the real Snowflake account and seeded users. Failures and flakes are listed in that report, not hidden.
+
+| Check | Result |
+| --- | --- |
+| Unit and architecture tests, lint, format, mypy strict | 236 passed, clean |
+| Golden question set (cited hero and control answers) | 19 of 19 |
+| Prompt-injection set | 12 of 12 |
+| Retrieval over the label corpus (74 positive, 8 negative queries) | recall@3, recall@5 and MRR of 1.0; negatives answered honestly |
+| Routing set | 44 of 47 (93.6%) |
+| Database checks | policy coverage and entitlement checks pass |
+| Ground truth | Every shown number equals its SQL |
+| Latency | Data endpoints about 1 s. A full safety review reads records and label text across several steps and typically takes 15 to 40 s, streamed live so the user always sees progress |
+
+Reproduce:
+
+```bash
+poetry run poe check                      # unit and architecture
+poetry run poe test:int                   # live tests against Snowflake (run per file)
+poetry run poe eval:routing               # routing set
+poetry run python scripts/eval_golden.py --set all
+```
+
+---
 
 ## Tech stack
 
@@ -85,6 +267,8 @@ flowchart LR
 | Tooling | Poetry, Poe the Poet, Ruff, mypy strict, pytest, pre-commit |
 | Deploy | Docker on Google Cloud Run (`scripts/deploy.py`), GitHub Actions CI |
 
+---
+
 ## Repo map
 
 ```text
@@ -92,9 +276,10 @@ src/medynium_api/
   main.py, router.py        app entry and the mount point for every feature
   core/                     config, error contract, sessions, audit, evidence, Cortex clients
   features/                 one self-contained folder per endpoint group
-    auth/  patients/  dashboard/  copilot/  evidence/
-    knowledge/  audit/  admin/  pins/  views/  health/
-snowflake/                  idempotent setup SQL, numbered in run order (00 to 90)
+    auth/  patients/  dashboard/  brief/  copilot/  evidence/  pins/
+    findings/  pending/  knowledge/  drug_coverage/  reports/  records/
+    similar/  views/  audit/  admin/  quality/  health/
+snowflake/                  idempotent setup SQL, numbered in run order
 data/, knowledge/           loaders and seed data
 evals/                      golden, injection and routing question sets
 scripts/                    db, deploy, evals, key and user setup, OpenAPI export
@@ -103,6 +288,8 @@ tests/                      unit, architecture and live Snowflake tests
 ```
 
 Each feature folder has its own `README.md` card: purpose, endpoints, requirement IDs and what it may import.
+
+---
 
 ## Quick start
 
@@ -116,9 +303,12 @@ poetry run poe dev            # http://localhost:8000/docs
 
 `/health` works with no Snowflake credentials. Everything else needs a Snowflake account set up as described in [docs/database/data-loading.md](docs/database/data-loading.md). Fill in `.env` from [.env.example](.env.example); every variable is explained in [docs/external-dependencies.md](docs/external-dependencies.md).
 
-If the UI runs on another origin, set `REFRESH_COOKIE_PATH=/api/auth` so the refresh cookie is scoped to the proxied path.
+If the UI runs on another origin, set `REFRESH_COOKIE_PATH=/api/auth` so the refresh cookie is scoped to the proxied path. If another project's virtualenv is active, run `deactivate` first or Poetry will install into that environment.
 
-If another project's virtualenv is active, run `deactivate` first or Poetry will install into that environment.
+<!-- MEDIA: docs/media/swagger-docs.png, a screenshot of /docs -->
+![Interactive API docs](docs/media/swagger-docs.png)
+
+---
 
 ## Daily commands
 
@@ -131,23 +321,24 @@ If another project's virtualenv is active, run `deactivate` first or Poetry will
 | `poetry run poe db:apply` / `db:check` / `db:status` | Apply, verify and report the Snowflake setup SQL |
 | `poetry run poe eval:routing` / `eval:golden` / `eval:injection` | Run the routing, golden and prompt-injection evals |
 
-## Quality at a glance
-
-Figures from the latest [test report](docs/quality/test-report.md), run against the real Snowflake account and seeded users.
-
-| Check | Result |
-| --- | --- |
-| Golden set | 15 of 15 |
-| Hero safety review stability | 12 of 12 across three phrasings |
-| Prompt-injection set | 12 of 12 |
-| Database checks | 17 of 17 |
-| Retrieval (recall@5) | 1.0 across 36 queries |
-| Routing set | 30 of 35 |
-| Hero latency | p50 24 s against a 20 s target |
+---
 
 ## Deploy
 
 `poetry run python scripts/deploy.py` builds the image with Cloud Build and rolls it out to the `medynium-api` Cloud Run service. Add `--setup` the first time to enable the APIs and create the registry, service account and secrets. A `render.yaml` Blueprint is also kept for Render. CI (`.github/workflows/ci.yml`) runs the checks, confirms the OpenAPI file is fresh and builds the Docker image on every push.
+
+---
+
+## Roadmap and honest limits
+
+- Cortex latency varies from run to run, so a full safety review takes tens of seconds. Streaming keeps the user informed; reducing round trips and context size is active work.
+- The label corpus is US labelling. A drug without an indexed label returns a gap, and clinicians can request coverage for an admin to add.
+- Report extraction is English only and needs legible print; handwriting is not supported.
+- Router misses are covered by server-side rules: entitlement, allowlist and evidence checks never depend on the route chosen.
+- Similar-patient quality is measured on a proxy only.
+- Next: a de-identified analyst role with its own access model, alerts and review queues, and broader label and regulatory coverage.
+
+---
 
 ## Docs
 
@@ -155,7 +346,10 @@ Figures from the latest [test report](docs/quality/test-report.md), run against 
 - [API reference](docs/api/README.md) and [database](docs/database/README.md)
 - [Quality reports](docs/quality/test-report.md) and [access and safety matrix](docs/quality/access-and-safety-matrix.md)
 - [External dependencies](docs/external-dependencies.md)
+- [Media shot list](docs/media/README.md)
 - [AGENTS.md](AGENTS.md): working rules for contributors and AI sessions
+
+---
 
 ## Rules that must not be broken
 
