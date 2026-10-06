@@ -146,6 +146,31 @@ class PanelQueries:
         _record(role, sql, all_params, len(rows), recorded)
         return rows
 
+    def patient_counts(self, role: str, recorded: list[SqlEvidence]) -> Row | None:
+        """How many of the caller's patients need attention and why, over the whole worklist (not just the top rows)."""
+        sql = (
+            "SELECT COUNT(*) AS TOTAL, COUNT_IF(FLAG_COUNT > 0) AS NEEDS_ATTENTION, COUNT_IF(HAS_RECENT_EMERGENCY) AS EMERGENCY, "
+            "COUNT_IF(HAS_NEW_MEDICATION_CHANGE) AS MED_CHANGES, COUNT_IF(HAS_NEW_DOCUMENT) AS NEW_DOCS "
+            "FROM ANALYTICS.DASHBOARD_WORKLIST"
+        )
+        with user_cursor(role) as cur:
+            rows = fetch_all(cur, sql, [])
+        _record(role, sql, [], len(rows), recorded)
+        return rows[0] if rows else None
+
+    def pending_counts(
+        self,
+        role: str,
+        kinds: list[str] | None,
+        patient_id: str | None,
+        recorded: list[SqlEvidence],
+    ) -> list[Row]:
+        sql, params = pending_query(kinds, patient_id, count=True)
+        with user_cursor(role) as cur:
+            rows = fetch_all(cur, sql, params)
+        _record(role, sql, params, len(rows), recorded)
+        return rows
+
     def changes(
         self, role: str, since: dt.date, until: dt.date, recorded: list[SqlEvidence]
     ) -> list[Row]:

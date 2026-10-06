@@ -184,3 +184,59 @@ def test_a_patient_outside_the_entitlement_list_is_dropped() -> None:
         and only.tag == "patient_fact"
         and only.group == "Your patients"
     )
+
+
+# Summary first, facts on request ---------------------------------------------------------------------------------
+def test_a_summary_request_is_a_panel_question_without_detail() -> None:
+    from medynium_api.features.copilot.panel_plan import wants_detail
+
+    assert tools("can you share a summary of my patients?") == ["list_my_patients"]
+    assert not wants_detail("who are my patients and what is pending?")
+    assert wants_detail("list my patients with the details")
+
+
+def test_quiet_evidence_is_kept_but_shows_no_statement() -> None:
+    builder = Builder(frozenset({"P-1"}))
+    builder.add("Your patients", "P-1", "Asha, 40 F", "Patient", "P-1", "T", None, quiet=True)
+    assert [e.evidence_id for e in builder.items] == ["P1"] and builder.considerations == []
+
+
+def test_pending_rows_group_into_one_line_per_patient() -> None:
+    from medynium_api.features.copilot.panel_summary import group_pending, pending_summary
+
+    def row(title: str) -> dict[str, Any]:
+        return {"patient_id": "P-1", "patient_name": "Asha", "title": title, "due_date": None}
+
+    grouped = group_pending([row("LDL 130 (high)"), row("eGFR 40 (low)")])
+    assert len(grouped) == 1 and grouped[0]["text"] == "Asha: LDL 130 (high); eGFR 40 (low)"
+    text = pending_summary([{"kind": "ABNORMAL_LAB", "n": 2}], 2, 0, [row("x")], False)
+    assert text.startswith("2 items are waiting for you: 2 abnormal labs.")
+
+
+# Follow-ups that point at the previous panel answer ------------------------------------------------------------------
+def test_follow_ups_resolve_against_the_remembered_answer(monkeypatch: pytest.MonkeyPatch) -> None:
+    import json
+
+    from medynium_api.core.evidence.models import PatientEvidence
+    from medynium_api.features.copilot import memory
+
+    def item(n: int, kind: str, rid: str | None, value: str) -> PatientEvidence:
+        return PatientEvidence(evidence_id=f"P{n}", record_type=kind, record_id=rid, table="T", value=value, date=None)  # fmt: skip
+
+    records = [item(i, "Patient", f"P-{i}", "x") for i in (1, 2, 10)]
+    records.append(item(11, "Panel plan", None, json.dumps([{"tool": "list_my_patients"}])))
+    evidence = type("E", (), {"patient_records": records})()
+    monkeypatch.setattr(memory, "load_evidence", lambda *_: evidence)
+
+    first = memory.follow_up(None, "open the first one", "ANS-1")  # type: ignore[arg-type]
+    assert first and first.steps[0].params == {"patient_id": "P-1"} and len(first.steps) == 1
+    last = memory.follow_up(None, "tell me about the last patient", "ANS-1")  # type: ignore[arg-type]
+    assert last and last.steps[0].params == {"patient_id": "P-10"}  # numeric order, not text order
+    assert [s.route for s in last.steps] == ["action", "agent"]
+    review = memory.follow_up(None, "open the second one and run the safety review", "ANS-1")  # type: ignore[arg-type]
+    assert review and [s.action for s in review.steps] == ["open_patient", "run_safety_review"]
+    more = memory.follow_up(None, "list them", "ANS-1")  # type: ignore[arg-type]
+    assert more and more.steps[0].route == "panel"
+    assert more.steps[0].params == {"calls": [{"tool": "list_my_patients"}]}
+    assert memory.follow_up(None, "open the first one", None) is None  # nothing remembered
+    assert memory.follow_up(None, "what is the weather", "ANS-1") is None  # not a follow-up

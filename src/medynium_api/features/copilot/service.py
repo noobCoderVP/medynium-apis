@@ -26,6 +26,7 @@ from medynium_api.features.copilot.handlers import Ctx
 from medynium_api.features.copilot.handlers.drug_info import run_drug_info
 from medynium_api.features.copilot.handlers.propose import run_propose
 from medynium_api.features.copilot.handlers.refuse import run_refuse
+from medynium_api.features.copilot.memory import follow_up
 from medynium_api.features.copilot.ports import Ports
 from medynium_api.features.copilot.repository import CopilotQueries, CopilotRepository
 from medynium_api.features.copilot.routing import NEEDS_PATIENT, Decision, Step, decide
@@ -34,17 +35,7 @@ from medynium_api.features.copilot.tools.compose import run_agent
 from medynium_api.features.copilot.tools.resolve import resolve
 
 log = structlog.get_logger()
-LAB_NAMES = (
-    "eGFR",
-    "Creatinine",
-    "Potassium",
-    "Sodium",
-    "HbA1c",
-    "TSH",
-    "LDL",
-    "Haemoglobin",
-    "Glucose",
-)
+LAB_NAMES = ("eGFR", "Creatinine", "Potassium", "Sodium", "HbA1c", "TSH", "LDL", "Haemoglobin", "Glucose")  # fmt: skip
 
 
 def _plan_label(step: Step) -> str:
@@ -124,7 +115,9 @@ class CopilotService:
             log.info("ask_entitled")
         with run.step("Choosing what to read") as plan_step:
             topics = self._topics(session, patient_id, last_answer_id)
-            decision = decide(self.settings, question, screen, patient_id, history, topics)
+            decision = follow_up(session, question, last_answer_id) or decide(
+                self.settings, question, screen, patient_id, history, topics
+            )
             plan_step.detail = ", ".join(
                 [
                     decision.model or "rules, no model",

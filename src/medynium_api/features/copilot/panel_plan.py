@@ -33,6 +33,15 @@ LIST = re.compile(
     r"|\b(show|list|give) (me )?(all )?(of )?my patients\b|\bmy (panel|caseload|list)\b|\bwho needs (my )?attention\b",
     re.IGNORECASE,
 )
+LIST_SUMMARY = re.compile(
+    r"\b(summary|summarise|summarize|overview|brief(ing)?)\b.{0,25}\b(my|all my) (patients|panel|caseload)\b",
+    re.IGNORECASE,
+)
+# Patient-by-patient lines are shown only when asked for; the default answer is a written summary.
+DETAIL = re.compile(
+    r"\b(list|show|detail|details|breakdown|break down|each|every|one by one|full|names?)\b",
+    re.IGNORECASE,
+)
 PENDING = re.compile(
     r"\bpending\b|\bwaiting\b|\boutstanding\b|\bto[- ]?do\b|\bneeds? (my )?(review|action)\b"
     r"|\bfollow[- ]?ups?\b|\boverdue\b|\bunreviewed\b|\bwhat('s| is| do i have) (left|open)\b",
@@ -66,6 +75,10 @@ class ToolCall(BaseModel):
     since: dt.date | None = None
 
 
+def wants_detail(question: str) -> bool:
+    return bool(DETAIL.search(question))
+
+
 def since_from(question: str, as_of: dt.date) -> dt.date:
     """ "since Monday", "yesterday", "this week", "last 3 days"; a week when nothing is said."""
     text = question.lower()
@@ -93,7 +106,8 @@ def plan_for(question: str, patient_id: str | None) -> list[dict[str, Any]] | No
     ):  # about the open patient: the closest of the clinician's own patients
         return [{"tool": "similar_patients", "patient_id": patient_id}]
     wants_list, wants_pending, wants_changes = (
-        bool(LIST.search(question)), bool(PENDING.search(question)), bool(CHANGES.search(question)),
+        bool(LIST.search(question) or LIST_SUMMARY.search(question)), bool(PENDING.search(question)),
+        bool(CHANGES.search(question)),
     )  # fmt: skip
     if wants_changes and not LIST_AND.search(question):
         wants_list = False  # "what changed across my patients" is the changes, not the list as well
