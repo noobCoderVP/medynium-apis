@@ -1,9 +1,14 @@
 <div align="center">
 
-<!-- MEDIA: banner. Suggested file: docs/media/banner.png (1600x400) -->
-<img src="docs/media/banner.png" alt="Medynium API: governed Patient 360 and clinical agent on Snowflake" width="100%" />
+<img src="docs/media/logo.png" alt="Medynium logo" width="96" />
 
 # Medynium API
+
+<p align="center">
+  <a href="https://www.snowflake.com"><img src="https://cdn.simpleicons.org/snowflake/29B5E8" alt="Snowflake" height="20" align="absmiddle" /></a>
+  <b>Built for the Snowflake CoCo CLI Hackathon (GCC Edition) 2026</b><br />
+  Problem Statement 4: Patient 360 and Clinical Document Copilot
+</p>
 
 ### A governed Patient 360 and clinical agent, built on Snowflake.
 
@@ -20,7 +25,7 @@ The backend where access control binds the AI, every answer carries evidence, an
 
 </div>
 
-> **Synthetic data only. Decision support, not diagnosis.** Built for the Snowflake CoCo CLI Hackathon 2026.
+> **Synthetic data only. Decision support, not diagnosis.**
 
 ---
 
@@ -343,9 +348,6 @@ poetry run poe setup                       # bootstrap, schemas, data, knowledge
 `/health` works with no Snowflake credentials. Everything else needs a Snowflake account set up as described in [docs/database/data-loading.md](docs/database/data-loading.md). Fill in `.env` from [.env.example](.env.example); every variable is explained in [docs/external-dependencies.md](docs/external-dependencies.md).
 
 If the UI runs on another origin, set `REFRESH_COOKIE_PATH=/api/auth` so the refresh cookie is scoped to the proxied path. If another project's virtualenv is active, run `deactivate` first or Poetry will install into that environment.
-
-<!-- MEDIA: docs/media/swagger-docs.png, a screenshot of /docs -->
-![Interactive API docs](docs/media/swagger-docs.png)
 
 ---
 
