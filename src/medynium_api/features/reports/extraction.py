@@ -25,6 +25,15 @@ LAB_NAMES: dict[str, str] = {
     "ldl": "18262-6", "ldl cholesterol": "18262-6", "ldl-c": "18262-6", "ldl c": "18262-6",
     "glucose": "2339-0", "fasting glucose": "2339-0", "fasting blood sugar": "2339-0", "fbs": "2339-0",
     "blood sugar": "2339-0", "random blood sugar": "2339-0", "rbs": "2339-0",
+    "free t4": "3024-7", "ft4": "3024-7", "free thyroxine": "3024-7", "thyroxine free": "3024-7",
+    "uric acid": "3084-1", "serum uric acid": "3084-1",
+    "chloride": "2075-0", "serum chloride": "2075-0", "cl-": "2075-0",
+    "blood urea": "3091-6", "urea": "3091-6", "serum urea": "3091-6",
+    "platelet count": "777-3", "platelets": "777-3", "plt": "777-3",
+    "triglycerides": "2571-8", "triglyceride": "2571-8", "tg": "2571-8",
+    "hdl": "2085-9", "hdl cholesterol": "2085-9", "hdl-c": "2085-9", "hdl c": "2085-9",
+    "wbc": "6690-2", "wbc count": "6690-2", "white blood cell count": "6690-2", "total leucocyte count": "6690-2",
+    "total cholesterol": "2093-3", "cholesterol": "2093-3", "cholesterol total": "2093-3",
 }  # fmt: skip
 # Words on a page that talk to an AI instead of describing a patient. A row quoting them is dropped even though the
 # words are on the page, so text planted in a report cannot become a medicine in a record.

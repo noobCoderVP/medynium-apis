@@ -18,7 +18,16 @@ MERGE INTO LAB_REFERENCE t USING (
     ('718-7','Haemoglobin','Haemoglobin','g/dL',12.0,17.0,'Adult reference range'),
     ('3016-3','TSH','Thyrotropin (TSH)','mIU/L',0.4,4.0,'Adult reference range'),
     ('18262-6','LDL','LDL cholesterol','mg/dL',NULL,100,'Optimal below 100'),
-    ('2339-0','Glucose','Glucose','mg/dL',70,99,'Fasting reference range')
+    ('2339-0','Glucose','Glucose','mg/dL',70,99,'Fasting reference range'),
+    ('3024-7','Free T4','Thyroxine (free T4)','ng/dL',0.8,1.8,'Adult reference range'),
+    ('3084-1','Uric acid','Uric acid','mg/dL',2.4,6.0,'Adult reference range'),
+    ('2075-0','Chloride','Chloride','mmol/L',98,107,'Adult reference range'),
+    ('3091-6','Blood urea','Urea','mg/dL',15,40,'Adult reference range'),
+    ('777-3','Platelets','Platelet count','10^3/uL',150,410,'Adult reference range'),
+    ('2571-8','Triglycerides','Triglycerides','mg/dL',NULL,150,'Normal below 150'),
+    ('2085-9','HDL','HDL cholesterol','mg/dL',50,NULL,'Desirable above 50 in women'),
+    ('6690-2','WBC','Leukocytes (WBC)','10^3/uL',4.0,11.0,'Adult reference range'),
+    ('2093-3','Total cholesterol','Total cholesterol','mg/dL',NULL,200,'Desirable below 200')
   AS v(LOINC_CODE, SHORT_NAME, TEST_NAME, UNIT, REF_LOW, REF_HIGH, SOURCE_NOTE)
 ) s ON t.LOINC_CODE = s.LOINC_CODE
 WHEN MATCHED THEN UPDATE SET SHORT_NAME = s.SHORT_NAME, TEST_NAME = s.TEST_NAME, UNIT = s.UNIT,
