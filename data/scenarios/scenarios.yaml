@@ -66,6 +66,7 @@ patients:
     extra: {opd: 5, hosp: 0, proc: 1}
     notes:
       - {id: DOC-OP-20884, type: OUTPATIENT_NOTE, title: Outpatient note, date: "2026-09-29", enc: ENC-20884, author: Dr. Sharma, body: "Blood pressure within target on current treatment. Thyroid replacement unchanged. Review in three months."}
+      - {id: DOC-OP-20885, type: OUTPATIENT_NOTE, title: Family and renal history note, date: "2026-09-29", enc: ENC-20884, author: Dr. Sharma, body: "No history of kidney disease or diabetes in the patient. Mother had chronic kidney disease. Denies chest pain. Not on metformin."}
 
   - id: P-1093
     scenario: S3

@@ -1,4 +1,4 @@
-# Golden set (07 section 4.1, FR-11, G3). 15 questions with expectations that are checked by code, not by eye.
+# Golden set (07 section 4.1, FR-11, G3). 25 questions with expectations that are checked by code, not by eye.
 # Run: poetry run python scripts/eval_golden.py --set golden   (needs the live Snowflake account and the seeded users)
 #
 # Fields: id, group, as (sharma | assistant), path (ask | review), patient, screen, question
@@ -247,3 +247,32 @@ cases:
       kind_any: [DRUG]
       contains: [egfr]
       tags_include: [retrieved_source]
+  - id: G23
+    group: negation
+    as: sharma
+    path: review
+    patient: P-1067
+    question: Run the safety review (note says no kidney disease and a mother with kidney disease)
+    expect:
+      gap: true
+      not_contains: [chronic kidney disease, ckd, kidney disease]
+  - id: G24
+    group: negation
+    as: sharma
+    path: ask
+    patient: P-1067
+    screen: patient
+    question: Does this patient have kidney disease, and should any of the current medicines be reviewed because of it?
+    expect:
+      not_contains: [has chronic kidney disease, diagnosed with chronic kidney disease, patient has ckd]
+      evidence_backed: true
+  - id: G25
+    group: negation
+    as: sharma
+    path: ask
+    patient: P-1067
+    screen: patient
+    question: Is this patient on metformin, and is there a diabetes-related concern with the kidney results?
+    expect:
+      not_contains: [takes metformin, is taking metformin, on metformin and]
+      evidence_backed: true

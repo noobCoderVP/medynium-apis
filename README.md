@@ -16,7 +16,7 @@ The backend where access control binds the AI, every answer carries evidence, an
 ![Cloud Run](https://img.shields.io/badge/deploy-Cloud%20Run-4285F4?logo=googlecloud&logoColor=white)
 ![Synthetic data](https://img.shields.io/badge/data-synthetic%20only-orange)
 
-**[Interactive API docs](#quick-start)** · **[UI repo](../medynium-ui)** · **[Mobile repo](../medynium-app)**
+**[Interactive API docs](#quick-start)** · **[Evaluation](docs/evaluation/README.md)** · **[Diagrams](docs/architecture/diagrams.md)** · **[UI repo](../medynium-ui)** · **[Mobile repo](../medynium-app)**
 
 </div>
 
@@ -28,21 +28,22 @@ The backend where access control binds the AI, every answer carries evidence, an
 
 1. [Why this backend is different](#why-this-backend-is-different)
 2. [Impact](#impact)
-3. [Capabilities](#capabilities)
-4. [Architecture](#architecture)
-5. [How a question is answered](#how-a-question-is-answered)
-6. [Security and governance model](#security-and-governance-model)
-7. [Data model on Snowflake](#data-model-on-snowflake)
-8. [API surface](#api-surface)
-9. [Quality and evaluation](#quality-and-evaluation)
-10. [Tech stack](#tech-stack)
-11. [Repo map](#repo-map)
-12. [Quick start](#quick-start)
-13. [Daily commands](#daily-commands)
-14. [Deploy](#deploy)
-15. [Roadmap and honest limits](#roadmap-and-honest-limits)
-16. [Docs](#docs)
-17. [Rules that must not be broken](#rules-that-must-not-be-broken)
+3. [Real-world use cases](#real-world-use-cases)
+4. [Capabilities](#capabilities)
+5. [Architecture](#architecture)
+6. [How a question is answered](#how-a-question-is-answered)
+7. [Security and governance model](#security-and-governance-model)
+8. [Data model on Snowflake](#data-model-on-snowflake)
+9. [API surface](#api-surface)
+10. [Quality and evaluation](#quality-and-evaluation)
+11. [Tech stack](#tech-stack)
+12. [Repo map](#repo-map)
+13. [Quick start](#quick-start)
+14. [Daily commands](#daily-commands)
+15. [Deploy](#deploy)
+16. [Roadmap and honest limits](#roadmap-and-honest-limits)
+17. [Docs](#docs)
+18. [Rules that must not be broken](#rules-that-must-not-be-broken)
 
 ---
 
@@ -70,6 +71,24 @@ Most clinical AI demos stop at "ask a question, get an answer". Medynium treats 
 - **Governance that holds up for sensitive data.** Entitlements are enforced by the database, so the AI layer cannot be talked into crossing a boundary the user does not have.
 - **One platform, small footprint.** Structured data, document search, the agent and row-level security all live in Snowflake. There is no Postgres, Redis or vector store to secure, sync or pay for.
 - **Built for its market.** Indian brand names resolve to generic drugs, claims are in INR, and the medicine corpus includes the National List of Essential Medicines.
+
+No deployment or user study has been run, so none of this is a claim about hours saved or outcomes improved. The full argument, with evidence and limits, is in [impact and use cases](docs/evaluation/impact-and-use-cases.md).
+
+---
+
+## Real-world use cases
+
+| Use case | Who | What the API provides | Proof |
+| --- | --- | --- | --- |
+| **Pre-consult review** | Treating doctor | Worklist with change flags and a rule-based brief of what changed and what is missing | Data screens p50 about 1 s, no model |
+| **Medicine safety check** against kidney function, allergies and labels | Treating doctor | A cited review joining the lab trend to the label section | 3 of 3 hero cases, recall@5 of 1.0 |
+| **Emergency and discharge follow-up** | Doctor, covering doctor | One pending list shared with the assistant, so screen and chat cannot disagree | 14 live pending tests |
+| **Medicines with no label** (Indian brands, typos) | Doctor, admin | Brand resolution, honest gaps, coverage requests | 8 of 8 negative queries honest |
+| **Paper reports to records** | Doctor, assistant | Extraction with quoted words and page; a doctor approves each row | 13 live report tests |
+| **Several doctors, one hospital** | Admin, compliance | Entitlements enforced by Snowflake; denied equals missing | 200-request role-leakage test |
+| **Audit and accountability** | Compliance reviewer | Every question, action, refusal and denial, with the prompt version hashed in | Stream equals audit row |
+
+Ten use cases are written up with their limits in [docs/evaluation/impact-and-use-cases.md](docs/evaluation/impact-and-use-cases.md#4-real-world-use-cases).
 
 ---
 
@@ -129,6 +148,8 @@ flowchart LR
   core -.-> service
   core -.-> repo
 ```
+
+More diagrams (sign-in and refresh, proposal approval, report intake, finding and report state machines, write path, ingestion order, delivery pipeline) are in the [diagram gallery](docs/architecture/diagrams.md).
 
 `tests/test_architecture.py` enforces the rules: a feature never imports another feature, only repositories (and `core/`) import the Snowflake driver, and files stay under 300 lines.
 
@@ -230,18 +251,29 @@ Errors always use `{ "error": "...", "message": "..." }` with codes from `core/e
 
 ## Quality and evaluation
 
-Figures from the latest [test report](docs/quality/test-report.md), run on 2026-10-04 against the real Snowflake account and seeded users. Failures and flakes are listed in that report, not hidden.
+Live runs against the real Snowflake account and seeded users. Failures are listed, not hidden. The summary below is the latest committed artifacts; tables, charts, method and open issues are in the **[evaluation hub](docs/evaluation/README.md)**.
 
-| Check | Result |
-| --- | --- |
-| Unit and architecture tests, lint, format, mypy strict | 236 passed, clean |
-| Golden question set (cited hero and control answers) | 19 of 19 |
-| Prompt-injection set | 12 of 12 |
-| Retrieval over the label corpus (74 positive, 8 negative queries) | recall@3, recall@5 and MRR of 1.0; negatives answered honestly |
-| Routing set | 44 of 47 (93.6%) |
-| Database checks | policy coverage and entitlement checks pass |
-| Ground truth | Every shown number equals its SQL |
-| Latency | Data endpoints about 1 s. A full safety review reads records and label text across several steps and typically takes 15 to 40 s, streamed live so the user always sees progress |
+| Check | Result | Detail |
+| --- | --- | --- |
+| Unit and architecture tests, lint, format, mypy strict | **250 passed**, clean (2026-10-06) | [results](docs/evaluation/results.md#1-scoreboard) |
+| Live integration (22 files, 157 test functions) | green per file after fixes | [test report](docs/quality/test-report.md) |
+| Database checks | 17 of 17, policy coverage and entitlement | [security](docs/evaluation/security-evaluation.md) |
+| Golden question set | **18 of 19** (95%); G09 is an open model-variance case | [golden](docs/evaluation/results.md#2-golden-question-set) |
+| Prompt-injection set | **12 of 12** | [injection](docs/evaluation/results.md#3-prompt-injection-set) |
+| Routing set | **72 of 73 (98.6%)**, hard cases 10 of 10 | [routing](docs/evaluation/results.md#4-routing) |
+| Retrieval over the label corpus (74 positive, 8 negative queries) | recall@3, recall@5 and MRR of 1.0; negatives answered honestly | [retrieval](docs/evaluation/results.md#5-retrieval-over-the-drug-label-corpus) |
+| Ground truth | Every shown number equals its SQL | [ground truth](docs/evaluation/results.md#6-ground-truth) |
+| Latency | Data endpoints about 1 s. Safety review p50 24 s against a 20 s target, streamed live | [performance](docs/evaluation/performance-and-cost.md) |
+| Cost | 0.02 credits for a timed run of about 100 calls | [cost](docs/evaluation/performance-and-cost.md#5-cost) |
+
+```mermaid
+xychart-beta
+  title "Routing set: cases per route (bar) and passed (line)"
+  x-axis [lookup, analyst, knowledge, safety, action, refuse, panel, agent, propose]
+  y-axis "Cases" 0 --> 15
+  bar [7, 4, 5, 6, 5, 12, 14, 13, 7]
+  line [7, 3, 5, 6, 5, 12, 14, 13, 7]
+```
 
 Reproduce:
 
@@ -301,6 +333,13 @@ cp .env.example .env          # Windows: copy .env.example .env
 poetry run poe dev            # http://localhost:8000/docs
 ```
 
+One-command Snowflake setup (idempotent; `--dry-run` lists the steps, `--from N` resumes, `--with-eval` also runs the evals):
+
+```bash
+poetry run python scripts/gen_keypair.py   # once
+poetry run poe setup                       # bootstrap, schemas, data, knowledge, search, users, checks
+```
+
 `/health` works with no Snowflake credentials. Everything else needs a Snowflake account set up as described in [docs/database/data-loading.md](docs/database/data-loading.md). Fill in `.env` from [.env.example](.env.example); every variable is explained in [docs/external-dependencies.md](docs/external-dependencies.md).
 
 If the UI runs on another origin, set `REFRESH_COOKIE_PATH=/api/auth` so the refresh cookie is scoped to the proxied path. If another project's virtualenv is active, run `deactivate` first or Poetry will install into that environment.
@@ -331,11 +370,15 @@ If the UI runs on another origin, set `REFRESH_COOKIE_PATH=/api/auth` so the ref
 
 ## Roadmap and honest limits
 
+- One golden case (G09, a medicine with no indexed label) occasionally gets a drafted conclusion instead of the honest gap. The planned fix is a code rule, not a prompt change.
 - Cortex latency varies from run to run, so a full safety review takes tens of seconds. Streaming keeps the user informed; reducing round trips and context size is active work.
 - The label corpus is US labelling. A drug without an indexed label returns a gap, and clinicians can request coverage for an admin to add.
 - Report extraction is English only and needs legible print; handwriting is not supported.
 - Router misses are covered by server-side rules: entitlement, allowlist and evidence checks never depend on the route chosen.
 - Similar-patient quality is measured on a proxy only.
+- Synthetic data only, one clinic, about 300 patients: the figures show behaviour, not clinical validation.
+- Negation and family-history handling rests on prompt rules and three golden cases; there is no rule-based negation parser.
+- Decision support, not diagnosis: the assistant never doses, prescribes or says a medicine is safe.
 - Next: a de-identified analyst role with its own access model, alerts and review queues, and broader label and regulatory coverage.
 
 ---
@@ -344,6 +387,9 @@ If the UI runs on another origin, set `REFRESH_COOKIE_PATH=/api/auth` so the ref
 
 - [Architecture overview](docs/architecture/overview.md), [AI layer](docs/architecture/ai-layer.md), [security and access](docs/architecture/security-and-access.md), [decisions](docs/architecture/decisions.md)
 - [API reference](docs/api/README.md) and [database](docs/database/README.md)
+- [CoCo evidence](docs/coco-evidence.md): skills, hooks, measured runs, and [data provenance](data/PROVENANCE.md)
+- **[Evaluation hub](docs/evaluation/README.md)**: [results](docs/evaluation/results.md), [feature coverage](docs/evaluation/feature-coverage.md), [security](docs/evaluation/security-evaluation.md), [performance and cost](docs/evaluation/performance-and-cost.md), [impact and use cases](docs/evaluation/impact-and-use-cases.md)
+- [Diagram gallery](docs/architecture/diagrams.md)
 - [Quality reports](docs/quality/test-report.md) and [access and safety matrix](docs/quality/access-and-safety-matrix.md)
 - [External dependencies](docs/external-dependencies.md)
 - [Media shot list](docs/media/README.md)

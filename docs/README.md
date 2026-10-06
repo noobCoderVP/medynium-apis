@@ -4,6 +4,8 @@ Architecture, data, API and quality documentation for the Medynium backend. Sour
 
 ## Read in this order
 
+0. [Evaluation hub](evaluation/README.md): results, feature coverage, security, performance and cost, impact and real-world use cases. [Diagram gallery](architecture/diagrams.md): 18 sequence, state, ER and flow diagrams.
+
 1. [Architecture overview](architecture/overview.md): components, flows, trust boundaries, deployment, risks
 2. [Security and access model](architecture/security-and-access.md): real accounts, sessions, roles, row access, what must be validated first
 3. [AI layer](architecture/ai-layer.md): routing, safety review, answer and evidence objects
